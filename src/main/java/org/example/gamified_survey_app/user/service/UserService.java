@@ -32,9 +32,10 @@ public class UserService {
         UserProfileDto dto = new UserProfileDto();
         dto.setFirstName(profile.getFirstName());
         dto.setLastName(profile.getLastName());
+        dto.setAge(profile.getAge());
         dto.setPhoneNumber(profile.getPhoneNumber());
         dto.setProfession(profile.getProfession());
-        dto.setAddress(profile.getAddress());
+        dto.setRegion(profile.getRegion());
 
         return dto;
     }
@@ -52,9 +53,10 @@ public class UserService {
 
         profile.setFirstName(profileDto.getFirstName());
         profile.setLastName(profileDto.getLastName());
+        profile.setAge(profileDto.getAge());
         profile.setPhoneNumber(profileDto.getPhoneNumber());
         profile.setProfession(profileDto.getProfession());
-        profile.setAddress(profileDto.getAddress());
+        profile.setRegion(profileDto.getRegion());
 
         userProfileRepository.save(profile);
 

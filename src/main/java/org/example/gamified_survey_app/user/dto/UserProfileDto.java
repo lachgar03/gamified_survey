@@ -7,7 +7,8 @@ import lombok.Data;
 public class UserProfileDto {
     private String FirstName;
     private String LastName;
+    private Integer age;
     private String phoneNumber;
     private String profession;
-    private String address;
+    private String region;
 }

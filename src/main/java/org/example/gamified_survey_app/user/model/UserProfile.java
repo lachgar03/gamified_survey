@@ -17,9 +17,10 @@ public class UserProfile {
     private Long id;
     private String FirstName;
     private String LastName;
+    private Integer Age;
     private String phoneNumber;
     private String profession;
-    private String address;
+    private String Region;
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private AppUser user;
