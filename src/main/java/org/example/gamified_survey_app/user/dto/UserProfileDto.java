@@ -5,10 +5,10 @@ import lombok.Data;
 
 @Data
 public class UserProfileDto {
-    private String FirstName;
-    private String LastName;
-    private Integer age;
-    private String phoneNumber;
+    private String lastName;
+    private String firstName;
     private String profession;
     private String region;
+    private Integer age;
+    private String phoneNumber;
 }

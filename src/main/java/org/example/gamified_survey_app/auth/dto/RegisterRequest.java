@@ -1,13 +1,12 @@
-package org.example.gamified_survey_app.auth.dto;
+    package org.example.gamified_survey_app.auth.dto;
 
-import lombok.Data;
+    import lombok.Data;
 
-@Data
-public class RegisterRequest {
-    private String email;
-    private String password;
-    private String Lastname;
-    private String Firstname;
-
-}
+    @Data
+    public class RegisterRequest {
+        private String email;
+        private String password;
+        private String firstname;
+        private String lastname;
+    }
 

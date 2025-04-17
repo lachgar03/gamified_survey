@@ -33,8 +33,6 @@ public class AuthService {
         }
         AppUser user = new AppUser();
         UserProfile userProfile = new UserProfile();
-        System.out.println("last name: " + request.getLastname());
-        System.out.println("first name: " + request.getFirstname());
         userProfile.setLastName(request.getLastname());
         userProfile.setFirstName(request.getFirstname());
         userProfile.setProfession(null);
@@ -46,7 +44,6 @@ public class AuthService {
         userRepository.save(user);
         userProfile.setUser(user);
         userProfileRepository.save(userProfile);
-        System.out.println(userProfile);
 
         // Use the injected UserDetailsService to load user details
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());

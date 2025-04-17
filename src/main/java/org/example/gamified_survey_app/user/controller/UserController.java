@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/profileManage")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -20,7 +20,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserProfile());
     }
 
-    @PutMapping("/profile")
+    @PutMapping("/update")
     public ResponseEntity<UserProfileDto> updateUserProfile(@RequestBody UserProfileDto profileDto) {
         return ResponseEntity.ok(userService.updateUserProfile(profileDto));
     }

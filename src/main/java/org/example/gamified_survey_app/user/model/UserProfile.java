@@ -15,12 +15,12 @@ public class UserProfile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String FirstName;
-    private String LastName;
-    private Integer Age;
+    private String firstName;
+    private String lastName;
+    private Integer age;
     private String phoneNumber;
     private String profession;
-    private String Region;
+    private String region;
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private AppUser user;

@@ -36,7 +36,7 @@ public class UserService {
         dto.setPhoneNumber(profile.getPhoneNumber());
         dto.setProfession(profile.getProfession());
         dto.setRegion(profile.getRegion());
-
+    
         return dto;
     }
 
