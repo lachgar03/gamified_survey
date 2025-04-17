@@ -28,20 +28,25 @@ public class AuthService {
     private final UserDetailsService userDetailsService;
 
     public AuthResponse register(RegisterRequest request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("An account with this email already exists");
+        }
         AppUser user = new AppUser();
         UserProfile userProfile = new UserProfile();
-        userProfile.setLastName(request.getNom());
-        userProfile.setFirstName(request.getPrenom());
+        System.out.println("last name: " + request.getLastname());
+        System.out.println("first name: " + request.getFirstname());
+        userProfile.setLastName(request.getLastname());
+        userProfile.setFirstName(request.getFirstname());
         userProfile.setProfession(null);
         userProfile.setAge(0);
         userProfile.setPhoneNumber(null);
         userProfile.setRegion(null);
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole("ROLE_PARTICIPANT");
         userRepository.save(user);
         userProfile.setUser(user);
         userProfileRepository.save(userProfile);
+        System.out.println(userProfile);
 
         // Use the injected UserDetailsService to load user details
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
