@@ -36,7 +36,7 @@ public class UserService {
         dto.setPhoneNumber(profile.getPhoneNumber());
         dto.setProfession(profile.getProfession());
         dto.setRegion(profile.getRegion());
-    
+        dto.setEmail(user.getEmail());
         return dto;
     }
 
@@ -50,7 +50,7 @@ public class UserService {
                     newProfile.setUser(user);
                     return newProfile;
                 });
-
+            
         profile.setFirstName(profileDto.getFirstName());
         profile.setLastName(profileDto.getLastName());
         profile.setAge(profileDto.getAge());

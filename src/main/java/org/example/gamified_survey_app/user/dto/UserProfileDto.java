@@ -11,4 +11,6 @@ public class UserProfileDto {
     private String region;
     private Integer age;
     private String phoneNumber;
+    private String email;
+
 }
