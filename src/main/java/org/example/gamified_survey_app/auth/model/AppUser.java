@@ -6,6 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.gamified_survey_app.core.constants.Roles;
 
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -18,6 +22,25 @@ public class AppUser {
     @Column(unique = true)
     private String email;
     private String password;
-    private String role= "PARTICIPANT";
+    private int xp;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    private Set<Roles> roles=new HashSet<>();
+    
+    // Ban fields
+    private boolean banned = false;
+    private String banReason;
+    private LocalDateTime bannedAt;
+    private LocalDateTime banExpiresAt;
+    
+    public boolean isBanActive() {
+        if (!banned) {
+            return false;
+        }
+        
+        // Check if ban is permanent or still active
+        return banExpiresAt == null || LocalDateTime.now().isBefore(banExpiresAt);
+    }
 }
 

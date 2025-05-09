@@ -35,19 +35,15 @@ public class SurveyService {
 
     @Transactional
     public SurveyDtos.SurveyResponse createSurvey(SurveyDtos.SurveyRequest request) {
-        // Get current user
         AppUser creator = getCurrentUser();
 
-        // Verify user role (only creators and admins can create surveys)
-        if (!creator.getRole().equals(Roles.CREATOR) && !creator.getRole().equals(Roles.ADMIN)) {
+        if (!(creator.getRoles().contains(Roles.CREATOR) || creator.getRoles().contains(Roles.ADMIN))) {
             throw new CustomException("Only survey creators can create surveys");
         }
 
-        // Find category
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new CustomException("Category not found"));
 
-        // Create survey
         Survey survey = new Survey();
         survey.setTitle(request.getTitle());
         survey.setDescription(request.getDescription());
@@ -57,11 +53,12 @@ public class SurveyService {
         survey.setCategory(category);
         survey.setXpReward(request.getXpReward());
         survey.setMinimumTimeSeconds(request.getMinimumTimeSeconds());
+        survey.setMaxParticipants(request.getMaxParticipants());
         survey.setActive(true);
+        survey.setVerified(false);
 
         Survey savedSurvey = surveyRepository.save(survey);
 
-        // Create questions and options
         if (request.getQuestions() != null) {
             for (SurveyDtos.QuestionRequest questionRequest : request.getQuestions()) {
                 Question question = new Question();
@@ -73,7 +70,6 @@ public class SurveyService {
 
                 Question savedQuestion = questionRepository.save(question);
 
-                // Create options for choice questions
                 if ((questionRequest.getType() == Question.QuestionType.SINGLE_CHOICE
                         || questionRequest.getType() == Question.QuestionType.MULTIPLE_CHOICE)
                         && questionRequest.getOptions() != null) {
@@ -96,7 +92,6 @@ public class SurveyService {
     public SurveyDtos.SurveyDetailResponse getSurveyById(Long id) {
         Survey survey = surveyRepository.findById(id)
                 .orElseThrow(() -> new CustomException("Survey not found"));
-
         return mapToSurveyDetailResponse(survey);
     }
 
@@ -114,9 +109,7 @@ public class SurveyService {
     public List<SurveyDtos.SurveyResponse> getSurveysByCreator() {
         AppUser creator = getCurrentUser();
         List<Survey> surveys = surveyRepository.findByCreator(creator);
-        return surveys.stream()
-                .map(this::mapToSurveyResponse)
-                .collect(Collectors.toList());
+        return surveys.stream().map(this::mapToSurveyResponse).collect(Collectors.toList());
     }
 
     @Transactional
@@ -125,9 +118,8 @@ public class SurveyService {
         Survey survey = surveyRepository.findById(id)
                 .orElseThrow(() -> new CustomException("Survey not found"));
 
-        // Verify ownership or admin role
         if (!survey.getCreator().getId().equals(currentUser.getId())
-                && !currentUser.getRole().equals(Roles.ADMIN)) {
+                && !currentUser.getRoles().contains(Roles.ADMIN)) {
             throw new CustomException("You don't have permission to deactivate this survey");
         }
 
@@ -141,27 +133,27 @@ public class SurveyService {
         Survey survey = surveyRepository.findById(request.getSurveyId())
                 .orElseThrow(() -> new CustomException("Survey not found"));
 
-        // Check if survey is active
         if (!survey.isActive() || survey.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new CustomException("This survey is no longer active");
         }
 
-        // Check if user has already responded
         if (surveyResponseRepository.existsBySurveyAndUser(survey, currentUser)) {
             throw new CustomException("You have already completed this survey");
         }
+        
+        // Check if survey has reached its maximum participants limit
+        if (survey.getMaxParticipants() != null) {
+            Long currentResponseCount = surveyResponseRepository.countResponsesBySurvey(survey);
+            if (currentResponseCount >= survey.getMaxParticipants()) {
+                throw new CustomException("This survey has reached its maximum number of participants");
+            }
+        }
 
-        // Calculate time spent
         Duration timeSpent = Duration.between(request.getStartedAt(), request.getCompletedAt());
         int timeSpentSeconds = (int) timeSpent.getSeconds();
-
-        // Detect suspicious activity (too fast)
         boolean isSuspicious = timeSpentSeconds < survey.getMinimumTimeSeconds();
-
-        // Calculate XP reward (0 if suspicious)
         int xpAwarded = isSuspicious ? 0 : survey.getXpReward();
 
-        // Create survey response
         SurveyResponse response = new SurveyResponse();
         response.setSurvey(survey);
         response.setUser(currentUser);
@@ -173,13 +165,11 @@ public class SurveyService {
 
         SurveyResponse savedResponse = surveyResponseRepository.save(response);
 
-        // Process question responses
         if (request.getResponses() != null) {
             for (SurveyDtos.QuestionResponseRequest questionResponseRequest : request.getResponses()) {
                 Question question = questionRepository.findById(questionResponseRequest.getQuestionId())
                         .orElseThrow(() -> new CustomException("Question not found"));
 
-                // Verify question belongs to the survey
                 if (!question.getSurvey().getId().equals(survey.getId())) {
                     throw new CustomException("Question does not belong to this survey");
                 }
@@ -188,7 +178,6 @@ public class SurveyService {
                 questionResponse.setQuestion(question);
                 questionResponse.setSurveyResponse(savedResponse);
 
-                // Handle different question types
                 switch (question.getType()) {
                     case TEXT:
                         questionResponse.setTextResponse(questionResponseRequest.getTextResponse());
@@ -214,7 +203,6 @@ public class SurveyService {
             }
         }
 
-        // Update user XP if not suspicious
         if (!isSuspicious) {
             updateUserXp(currentUser, xpAwarded);
         }
@@ -231,9 +219,8 @@ public class SurveyService {
 
     @Transactional
     public void updateUserXp(AppUser user, int xpToAdd) {
-        // Here we would update the user's XP in the gamification system
-        // This is just a placeholder - you'll need to implement the full gamification service
-        // For now, we'll just log that XP would be awarded
+        user.setXp(user.getXp() + xpToAdd);
+        userRepository.save(user);
         System.out.println("Awarded " + xpToAdd + " XP to user " + user.getEmail());
     }
 
@@ -253,9 +240,11 @@ public class SurveyService {
                 survey.getCreatedAt(),
                 survey.getExpiresAt(),
                 survey.isActive(),
+                survey.isVerified(),
                 survey.getCreator().getEmail(),
                 survey.getCategory().getName(),
                 survey.getXpReward(),
+                survey.getMaxParticipants(),
                 responseCount
         );
     }
@@ -293,14 +282,17 @@ public class SurveyService {
                 survey.getCreatedAt(),
                 survey.getExpiresAt(),
                 survey.isActive(),
+                survey.isVerified(),
                 survey.getCreator().getEmail(),
                 survey.getCategory().getName(),
                 survey.getXpReward(),
                 survey.getMinimumTimeSeconds(),
+                survey.getMaxParticipants(),
                 questionResponses,
                 responseCount
         );
     }
+
     public Page<SurveyDtos.SurveyResponse> getAllSurveys(Pageable pageable) {
         Page<Survey> surveys = surveyRepository.findAll(pageable);
         return surveys.map(this::mapToSurveyResponse);
@@ -313,7 +305,7 @@ public class SurveyService {
                 .orElseThrow(() -> new CustomException("Survey not found"));
 
         if (!survey.getCreator().getId().equals(currentUser.getId())
-                && !currentUser.getRole().equals(Roles.ADMIN)) {
+                && !currentUser.getRoles().contains(Roles.ADMIN)) {
             throw new CustomException("You don't have permission to delete this survey");
         }
 
@@ -327,7 +319,7 @@ public class SurveyService {
                 .orElseThrow(() -> new CustomException("Survey not found"));
 
         if (!survey.getCreator().getId().equals(currentUser.getId())
-                && !currentUser.getRole().equals(Roles.ADMIN)) {
+                && !currentUser.getRoles().contains(Roles.ADMIN)) {
             throw new CustomException("You don't have permission to update this survey");
         }
 
@@ -360,5 +352,4 @@ public class SurveyService {
                 averageTimeSpent
         );
     }
-
 }

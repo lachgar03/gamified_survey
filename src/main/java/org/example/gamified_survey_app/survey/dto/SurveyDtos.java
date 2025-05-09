@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.gamified_survey_app.survey.model.Question;
+import org.example.gamified_survey_app.survey.model.QuestionResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,6 +21,7 @@ public class SurveyDtos {
         private Long categoryId;
         private Integer xpReward;
         private Integer minimumTimeSeconds;
+        private Integer maxParticipants;
         private List<QuestionRequest> questions;
     }
 
@@ -52,9 +54,11 @@ public class SurveyDtos {
         private LocalDateTime createdAt;
         private LocalDateTime expiresAt;
         private boolean active;
+        private boolean verified;
         private String creatorEmail;
         private String categoryName;
         private Integer xpReward;
+        private Integer maxParticipants;
         private Long responseCount;
     }
 
@@ -68,10 +72,12 @@ public class SurveyDtos {
         private LocalDateTime createdAt;
         private LocalDateTime expiresAt;
         private boolean active;
+        private boolean verified;
         private String creatorEmail;
         private String categoryName;
         private Integer xpReward;
         private Integer minimumTimeSeconds;
+        private Integer maxParticipants;
         private List<QuestionResponse> questions;
         private Long responseCount;
     }
@@ -155,5 +161,68 @@ public class SurveyDtos {
         private Long suspiciousResponses;
         private Double averageTimeSpentSeconds;
     }
+
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ForumRequest {
+        private String title;
+        private String description;
+        private Long surveyId;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ForumResponse {
+        private Long id;
+        private String title;
+        private String description;
+        private LocalDateTime createdAt;
+        private Long surveyId;
+        private String surveyTitle;
+        private int subjectCount;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SubjectRequest {
+        private String title;
+        private Long forumId;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SubjectResponse {
+        private Long id;
+        private String title;
+        private LocalDateTime postedAt;
+        private String creatorEmail;
+        private Long forumId;
+        private int commentCount;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CommentRequest {
+        private String content;
+        private Long subjectId;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CommentResponse {
+        private Long id;
+        private String content;
+        private LocalDateTime sentDate;
+        private String creatorEmail;
+        private Long subjectId;
+    }
+
 
 }

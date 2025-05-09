@@ -1,0 +1,111 @@
+package org.example.gamified_survey_app.admin.service;
+
+import lombok.RequiredArgsConstructor;
+import org.example.gamified_survey_app.admin.dto.UserBanRequest;
+import org.example.gamified_survey_app.auth.model.AppUser;
+import org.example.gamified_survey_app.auth.repository.UserRepository;
+import org.example.gamified_survey_app.core.constants.Roles;
+import org.example.gamified_survey_app.core.exception.CustomException;
+import org.example.gamified_survey_app.survey.model.Survey;
+import org.example.gamified_survey_app.survey.repository.SurveyRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class AdminService {
+
+    private final UserRepository userRepository;
+    private final SurveyRepository surveyRepository;
+    
+    @Transactional
+    public AppUser banUser(UserBanRequest request) {
+        // Check if current user is admin
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        AppUser currentUser = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new CustomException("Current user not found"));
+        
+        if (!currentUser.getRoles().contains(Roles.ADMIN)) {
+            throw new CustomException("Only admins can ban users");
+        }
+        
+        // Find the user to ban
+        AppUser userToBan = userRepository.findById(request.getUserId())
+            .orElseThrow(() -> new CustomException("User not found"));
+        
+        // Set ban information
+        userToBan.setBanned(true);
+        userToBan.setBanReason(request.getReason());
+        userToBan.setBannedAt(LocalDateTime.now());
+        
+        if (!request.isPermanent()) {
+            // Default ban duration: 30 days if not permanent
+            userToBan.setBanExpiresAt(LocalDateTime.now().plusDays(30));
+        } else {
+            userToBan.setBanExpiresAt(null); // Permanent ban
+        }
+        
+        return userRepository.save(userToBan);
+    }
+    
+    @Transactional
+    public AppUser unbanUser(Long userId) {
+        // Check if current user is admin
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        AppUser currentUser = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new CustomException("Current user not found"));
+        
+        if (!currentUser.getRoles().contains(Roles.ADMIN)) {
+            throw new CustomException("Only admins can unban users");
+        }
+        
+        // Find the user to unban
+        AppUser userToUnban = userRepository.findById(userId)
+            .orElseThrow(() -> new CustomException("User not found"));
+        
+        // Remove ban
+        userToUnban.setBanned(false);
+        userToUnban.setBanReason(null);
+        userToUnban.setBannedAt(null);
+        userToUnban.setBanExpiresAt(null);
+        
+        return userRepository.save(userToUnban);
+    }
+    
+    @Transactional
+    public List<AppUser> getBannedUsers() {
+        // Check if current user is admin
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        AppUser currentUser = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new CustomException("Current user not found"));
+        
+        if (!currentUser.getRoles().contains(Roles.ADMIN)) {
+            throw new CustomException("Only admins can view banned users");
+        }
+        
+        return userRepository.findByBannedTrue();
+    }
+    
+    @Transactional
+    public Survey verifySurvey(Long surveyId) {
+        // Check if current user is admin
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        AppUser currentUser = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new CustomException("Current user not found"));
+        
+        if (!currentUser.getRoles().contains(Roles.ADMIN)) {
+            throw new CustomException("Only admins can verify surveys");
+        }
+        
+        Survey survey = surveyRepository.findById(surveyId)
+            .orElseThrow(() -> new CustomException("Survey not found"));
+        
+        survey.setVerified(true);
+        return surveyRepository.save(survey);
+    }
+} 

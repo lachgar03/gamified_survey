@@ -1,27 +1,24 @@
-package org.example.gamified_survey_app.survey.model;
+package org.example.gamified_survey_app.gamification.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Category {
+public class Level {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(unique = true)
+    
     private String name;
-
+    private Integer number;
+    private Integer pointsThreshold;
     private String description;
-
-    @OneToMany(mappedBy = "category")
-    private List<Survey> surveys = new ArrayList<>();
-}
+    
+    // Optional: Badge or icon URL for this level
+    private String badgeUrl;
+} 

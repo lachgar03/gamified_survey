@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.aspectj.weaver.patterns.TypePatternQuestions;
 import org.example.gamified_survey_app.auth.model.AppUser;
 
 import java.time.LocalDateTime;
@@ -25,6 +24,8 @@ public class Survey {
     private LocalDateTime createdAt;
     private LocalDateTime expiresAt;
     private boolean active = true;
+    private boolean hasForum = false;
+    private boolean verified = false;
 
     @ManyToOne
     @JoinColumn(name = "creator_id")
@@ -36,8 +37,31 @@ public class Survey {
 
     @OneToMany(mappedBy = "survey", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Question> questions = new ArrayList<>();
-
+    @OneToOne(mappedBy = "survey", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Forum forum;
     private Integer xpReward = 10;
 
     private Integer minimumTimeSeconds = 60;
+    
+    // Max participants field to limit the number of responses
+    private Integer maxParticipants;
+    
+    // Method to enable forum
+    public void enableForum(String title, String description) {
+        if (this.forum == null) {
+            Forum newForum = new Forum();
+            newForum.setTitle(title);
+            newForum.setDescription(description);
+            newForum.setCreatedAt(LocalDateTime.now());
+            newForum.setSurvey(this);
+            this.forum = newForum;
+            this.hasForum = true;
+        }
+    }
+
+    // Method to disable forum
+    public void disableForum() {
+        this.forum = null;
+        this.hasForum = false;
+    }
 }
