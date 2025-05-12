@@ -1,13 +1,30 @@
 package org.example.gamified_survey_app.survey.service;
 
-import lombok.RequiredArgsConstructor;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.example.gamified_survey_app.auth.model.AppUser;
 import org.example.gamified_survey_app.auth.repository.UserRepository;
 import org.example.gamified_survey_app.core.constants.Roles;
 import org.example.gamified_survey_app.core.exception.CustomException;
+import org.example.gamified_survey_app.core.service.FraudDetectionService;
+import org.example.gamified_survey_app.gamification.service.LeaderboardService;
 import org.example.gamified_survey_app.survey.dto.SurveyDtos;
-import org.example.gamified_survey_app.survey.model.*;
-import org.example.gamified_survey_app.survey.repository.*;
+import org.example.gamified_survey_app.survey.model.Category;
+import org.example.gamified_survey_app.survey.model.Question;
+import org.example.gamified_survey_app.survey.model.QuestionOption;
+import org.example.gamified_survey_app.survey.model.QuestionResponse;
+import org.example.gamified_survey_app.survey.model.Survey;
+import org.example.gamified_survey_app.survey.model.SurveyResponse;
+import org.example.gamified_survey_app.survey.repository.CategoryRepository;
+import org.example.gamified_survey_app.survey.repository.QuestionOptionRepository;
+import org.example.gamified_survey_app.survey.repository.QuestionRepository;
+import org.example.gamified_survey_app.survey.repository.QuestionResponseRepository;
+import org.example.gamified_survey_app.survey.repository.SurveyRepository;
+import org.example.gamified_survey_app.survey.repository.SurveyResponseRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,11 +32,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +45,8 @@ public class SurveyService {
     private final SurveyResponseRepository surveyResponseRepository;
     private final QuestionResponseRepository questionResponseRepository;
     private final UserRepository userRepository;
+    private final LeaderboardService leaderboardService;
+    private final FraudDetectionService fraudDetectionService;
 
     @Transactional
     public SurveyDtos.SurveyResponse createSurvey(SurveyDtos.SurveyRequest request) {
@@ -151,7 +166,11 @@ public class SurveyService {
 
         Duration timeSpent = Duration.between(request.getStartedAt(), request.getCompletedAt());
         int timeSpentSeconds = (int) timeSpent.getSeconds();
-        boolean isSuspicious = timeSpentSeconds < survey.getMinimumTimeSeconds();
+        
+        // Use fraud detection service to check for suspicious responses
+        boolean isSuspicious = fraudDetectionService.isSuspiciousResponse(
+            survey, timeSpentSeconds, currentUser);
+        
         int xpAwarded = isSuspicious ? 0 : survey.getXpReward();
 
         SurveyResponse response = new SurveyResponse();
@@ -203,6 +222,20 @@ public class SurveyService {
             }
         }
 
+        // Perform deeper pattern analysis after responses are saved
+        if (!isSuspicious && fraudDetectionService.analyzeResponsePatterns(savedResponse)) {
+            // If suspicious patterns detected in response analysis
+            savedResponse.setFlaggedAsSuspicious(true);
+            savedResponse.setXpAwarded(0);
+            surveyResponseRepository.save(savedResponse);
+            isSuspicious = true;
+            xpAwarded = 0;
+            
+            // Flag user for suspicious activity
+            fraudDetectionService.flagUser(currentUser, 
+                "Suspicious response patterns detected in survey ID: " + survey.getId());
+        }
+
         if (!isSuspicious) {
             updateUserXp(currentUser, xpAwarded);
         }
@@ -221,6 +254,10 @@ public class SurveyService {
     public void updateUserXp(AppUser user, int xpToAdd) {
         user.setXp(user.getXp() + xpToAdd);
         userRepository.save(user);
+        
+        // Update the user's position in the leaderboards
+        leaderboardService.updateUserXp(user, xpToAdd);
+        
         System.out.println("Awarded " + xpToAdd + " XP to user " + user.getEmail());
     }
 

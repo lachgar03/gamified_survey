@@ -1,6 +1,5 @@
 package org.example.gamified_survey_app.config;
 
-import lombok.RequiredArgsConstructor;
 import org.example.gamified_survey_app.auth.security.CustomUserDetailsService;
 import org.example.gamified_survey_app.core.util.JwtUtils;
 import org.springframework.context.annotation.Bean;
@@ -15,9 +14,13 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.access.channel.ChannelProcessingFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import jakarta.servlet.Filter;
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -28,6 +31,8 @@ public class SecurityConfig {
     private final JwtUtils jwtTokenUtil;
     private final CustomUserDetailsService userDetailsService;
     private final CorsFilter corsFilter; // Inject the CorsFilter from WebConfig
+    private final OncePerRequestFilter rateLimitFilter; // Inject the rate limiter
+    private final Filter securityHeadersFilter; // Inject the security headers filter
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -76,6 +81,10 @@ public class SecurityConfig {
                         // Default - require authentication for all other endpoints
                         .anyRequest().authenticated()
                 )
+                // Add the security headers filter first
+                .addFilterBefore(securityHeadersFilter, ChannelProcessingFilter.class)
+                // Add the rate limit filter next
+                .addFilterBefore(rateLimitFilter, ChannelProcessingFilter.class)
                 // Add the corsFilter before the JwtAuthenticationFilter
                 .addFilterBefore(corsFilter, ChannelProcessingFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

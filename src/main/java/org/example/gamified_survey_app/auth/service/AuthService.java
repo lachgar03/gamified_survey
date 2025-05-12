@@ -1,6 +1,9 @@
 package org.example.gamified_survey_app.auth.service;
 
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.UUID;
+
 import org.example.gamified_survey_app.auth.dto.AuthResponse;
 import org.example.gamified_survey_app.auth.dto.LoginRequest;
 import org.example.gamified_survey_app.auth.dto.PasswordResetDto;
@@ -15,17 +18,16 @@ import org.example.gamified_survey_app.core.service.EmailService;
 import org.example.gamified_survey_app.core.util.JwtUtils;
 import org.example.gamified_survey_app.user.model.UserProfile;
 import org.example.gamified_survey_app.user.repository.UserProfileRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-
 import org.springframework.transaction.annotation.Transactional;
-import java.time.LocalDateTime;
-import java.util.UUID;
-import java.util.HashSet;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +43,12 @@ public class AuthService {
     
     // Token expiration time in minutes
     private static final int RESET_TOKEN_EXPIRATION_MINUTES = 30;
+    
+    @Value("${admin.username:admin@example.com}")
+    private String adminUsername;
+    
+    @Value("${admin.password:changeThisInProduction!}")
+    private String adminPassword;
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -70,13 +78,13 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
         // Special case for admin login
-        if ("admin".equals(request.getEmail()) && "admin".equals(request.getPassword())) {
-            AppUser adminUser = userRepository.findByEmail("admin")
+        if (adminUsername.equals(request.getEmail()) && adminPassword.equals(request.getPassword())) {
+            AppUser adminUser = userRepository.findByEmail(adminUsername)
                     .orElseGet(() -> {
                         // Create admin user if it doesn't exist
                         AppUser newAdmin = new AppUser();
-                        newAdmin.setEmail("admin");
-                        newAdmin.setPassword(passwordEncoder.encode("admin"));
+                        newAdmin.setEmail(adminUsername);
+                        newAdmin.setPassword(passwordEncoder.encode(adminPassword));
                         // Initialize roles set if needed
                         if (newAdmin.getRoles() == null) {
                             newAdmin.setRoles(new HashSet<>());
@@ -166,5 +174,11 @@ public class AuthService {
         userRepository.save(user);
         
         passwordResetTokenRepository.delete(resetToken);
+    }
+    public boolean isEmailAvailable(String email) {
+        return !userRepository.findByEmail(email).isPresent();
+    }
+    public boolean validateToken(String token) {
+        return jwtUtils.validateToken(token);
     }
 }
