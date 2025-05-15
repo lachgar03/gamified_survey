@@ -72,7 +72,7 @@ public class LevelController {
 
     @GetMapping("/user")
     public ResponseEntity<LevelDTO> getUserLevel(@AuthenticationPrincipal AppUser user) {
-        Level level = levelService.getUserLevel(user);
+        Level level = levelService.getUserLevel(user); // This can throw ResourceNotFoundException
         return ResponseEntity.ok(convertToDTO(level));
     }
 

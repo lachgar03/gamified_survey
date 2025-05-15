@@ -76,7 +76,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/forums/*/sujet/create").hasAnyRole("CREATOR", "ADMIN")
 
                         // Profile management
-                        .requestMatchers("/api/profile/**").authenticated()
+                        .requestMatchers("/api/profileManage/**").authenticated()
 
                         // Default - require authentication for all other endpoints
                         .anyRequest().authenticated()

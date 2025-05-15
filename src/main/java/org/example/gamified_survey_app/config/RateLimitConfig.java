@@ -11,9 +11,12 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.IOException;
 
 @Slf4j
 @Configuration
@@ -29,7 +32,7 @@ public class RateLimitConfig {
                 .maximumSize(10000)
                 .build();
     }
-    
+
     @Bean
     public Cache<String, Integer> rateLimitCacheHour() {
         return Caffeine.newBuilder()
@@ -37,66 +40,63 @@ public class RateLimitConfig {
                 .maximumSize(10000)
                 .build();
     }
-    
+
     @Bean
     public OncePerRequestFilter rateLimitFilter(Cache<String, Integer> rateLimitCacheMinute,
-                                               Cache<String, Integer> rateLimitCacheHour) {
+                                                Cache<String, Integer> rateLimitCacheHour) {
         return new OncePerRequestFilter() {
             @Override
-            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
-                    FilterChain filterChain) {
+            protected void doFilterInternal(HttpServletRequest request,
+                                            HttpServletResponse response,
+                                            FilterChain filterChain) throws ServletException, IOException {
                 try {
                     // Skip rate limiting for static resources
                     String path = request.getRequestURI();
-                    if (path.startsWith("/css") || path.startsWith("/js") || path.startsWith("/images") 
-                            || path.startsWith("/favicon.ico")) {
+                    if (path.startsWith("/css") || path.startsWith("/js") ||
+                            path.startsWith("/images") || path.startsWith("/favicon.ico")) {
                         filterChain.doFilter(request, response);
                         return;
                     }
-                    
-                    // Get client IP or use X-Forwarded-For if available
+
                     String clientIp = getClientIP(request);
-                    
-                    // Create cache keys
                     String minuteKey = clientIp + "_minute";
                     String hourKey = clientIp + "_hour";
-                    
-                    // Get and increment counters
-                    Integer requestsPerMinute = rateLimitCacheMinute.get(minuteKey, k -> 0);
-                    Integer requestsPerHour = rateLimitCacheHour.get(hourKey, k -> 0);
-                    
+
+                    int requestsPerMinute = rateLimitCacheMinute.getIfPresent(minuteKey) != null
+                            ? rateLimitCacheMinute.getIfPresent(minuteKey) : 0;
+                    int requestsPerHour = rateLimitCacheHour.getIfPresent(hourKey) != null
+                            ? rateLimitCacheHour.getIfPresent(hourKey) : 0;
+
                     if (requestsPerMinute >= MAX_REQUESTS_PER_MINUTE) {
                         log.warn("Rate limit exceeded for IP {}: {} requests per minute", clientIp, requestsPerMinute);
                         response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-                        response.getWriter().write("{\"error\":\"Rate limit exceeded. Please try again later.\"}");
                         response.setContentType("application/json");
+                        response.getWriter().write("{\"error\":\"Rate limit exceeded. Please try again later.\"}");
                         return;
                     }
-                    
+
                     if (requestsPerHour >= MAX_REQUESTS_PER_HOUR) {
                         log.warn("Rate limit exceeded for IP {}: {} requests per hour", clientIp, requestsPerHour);
                         response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-                        response.getWriter().write("{\"error\":\"Hourly rate limit exceeded. Please try again later.\"}");
                         response.setContentType("application/json");
+                        response.getWriter().write("{\"error\":\"Hourly rate limit exceeded. Please try again later.\"}");
                         return;
                     }
-                    
+
                     // Increment counters
                     rateLimitCacheMinute.put(minuteKey, requestsPerMinute + 1);
                     rateLimitCacheHour.put(hourKey, requestsPerHour + 1);
-                    
-                    // Continue with request
+
                     filterChain.doFilter(request, response);
                 } catch (Exception e) {
                     log.error("Error in rate limit filter", e);
-                    try {
-                        filterChain.doFilter(request, response);
-                    } catch (Exception ex) {
-                        log.error("Error continuing filter chain", ex);
-                    }
+                    // Respond with 500 if rate limiter itself fails
+                    response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\":\"Internal server error in rate limiter.\"}");
                 }
             }
-            
+
             private String getClientIP(HttpServletRequest request) {
                 String xfHeader = request.getHeader("X-Forwarded-For");
                 if (xfHeader == null) {
@@ -106,4 +106,4 @@ public class RateLimitConfig {
             }
         };
     }
-} 
+}

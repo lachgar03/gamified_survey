@@ -6,10 +6,13 @@ import org.example.gamified_survey_app.auth.dto.AuthResponse;
 import org.example.gamified_survey_app.auth.dto.LoginRequest;
 import org.example.gamified_survey_app.auth.dto.RegisterRequest;
 import org.example.gamified_survey_app.auth.model.AppUser;
+import org.example.gamified_survey_app.auth.security.CustomUserDetailsService;
 import org.example.gamified_survey_app.auth.service.AuthService;
+import org.example.gamified_survey_app.core.util.JwtUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,6 +38,8 @@ public class AuthController {
      * @param registerRequest contains user registration details
      * @return JWT token and user information
      */
+
+
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
         log.info("Registration request received for email: {}", registerRequest.getEmail());
@@ -139,4 +144,6 @@ public class AuthController {
         status.put("status", "Auth service is running");
         return ResponseEntity.ok(status);
     }
+
+
 }

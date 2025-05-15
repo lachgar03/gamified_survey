@@ -40,7 +40,7 @@ public class AuthService {
     private final UserDetailsService userDetailsService;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
-    
+
     // Token expiration time in minutes
     private static final int RESET_TOKEN_EXPIRATION_MINUTES = 30;
     
@@ -181,4 +181,6 @@ public class AuthService {
     public boolean validateToken(String token) {
         return jwtUtils.validateToken(token);
     }
+
+
 }
