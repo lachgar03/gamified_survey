@@ -45,6 +45,7 @@ public class SecurityConfig {
 
                         // Admin endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                         .requestMatchers("/api/user/me").authenticated()
 
                         // Survey-related endpoints with specific roles
                         .requestMatchers(

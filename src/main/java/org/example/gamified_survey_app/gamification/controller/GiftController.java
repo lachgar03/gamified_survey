@@ -1,6 +1,7 @@
 package org.example.gamified_survey_app.gamification.controller;
 
 import org.example.gamified_survey_app.auth.model.AppUser;
+import org.example.gamified_survey_app.auth.repository.UserRepository;
 import org.example.gamified_survey_app.core.exception.ResourceNotFoundException;
 import org.example.gamified_survey_app.gamification.dto.GiftDTO;
 import org.example.gamified_survey_app.gamification.dto.GiftRedemptionDTO;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,8 +22,17 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/gifts")
 public class GiftController {
-
+    @Autowired
+    private UserRepository userRepository;
     private final GiftService giftService;
+    private AppUser getAppUserFromUserDetails(UserDetails userDetails) {
+        if (userDetails == null) {
+            throw new IllegalArgumentException("Utilisateur non authentifié.");
+        }
+        String email = userDetails.getUsername();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé pour l'email : " + email));
+    }
 
     @Autowired
     public GiftController(GiftService giftService) {
@@ -45,12 +56,15 @@ public class GiftController {
     }
 
     @GetMapping("/for-user")
-    public ResponseEntity<List<GiftDTO>> getGiftsForUser(@AuthenticationPrincipal AppUser user) {
+    public ResponseEntity<List<GiftDTO>> getGiftsForUser(@AuthenticationPrincipal UserDetails userDetails) {
+        AppUser user = getAppUserFromUserDetails(userDetails);
+
         List<GiftDTO> gifts = giftService.getGiftsForUserPoints(user).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(gifts);
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<GiftDTO> getGiftById(@PathVariable Long id) {
@@ -92,21 +106,25 @@ public class GiftController {
     @PostMapping("/redeem")
     @PreAuthorize("hasAnyRole('PARTICIPANT', 'CREATOR', 'ADMIN')")
     public ResponseEntity<GiftRedemptionDTO> redeemGift(
-            @AuthenticationPrincipal AppUser user,
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody RedeemGiftRequest request) {
-        
+
+        AppUser user = getAppUserFromUserDetails(userDetails);
+
         GiftRedemption redemption = giftService.redeemGift(
-                user, 
+                user,
                 request.getGiftId(),
                 request.getDeliveryAddress(),
                 request.getDeliveryNotes()
         );
-        
+
         return ResponseEntity.ok(convertToRedemptionDTO(redemption));
     }
 
+
     @GetMapping("/redemptions")
-    public ResponseEntity<List<GiftRedemptionDTO>> getUserRedemptions(@AuthenticationPrincipal AppUser user) {
+    public ResponseEntity<List<GiftRedemptionDTO>> getUserRedemptions(@AuthenticationPrincipal UserDetails userDetails) {
+        AppUser user = getAppUserFromUserDetails(userDetails);
         List<GiftRedemptionDTO> redemptions = giftService.getUserRedemptions(user).stream()
                 .map(this::convertToRedemptionDTO)
                 .collect(Collectors.toList());

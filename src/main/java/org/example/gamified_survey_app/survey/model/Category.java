@@ -22,6 +22,4 @@ public class Category {
 
     private String description;
 
-    @OneToMany(mappedBy = "category")
-    private List<Survey> surveys = new ArrayList<>();
 }

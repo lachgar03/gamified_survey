@@ -64,8 +64,15 @@ public class AuthService {
         userProfile.setRegion(null);
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.getRoles().add(Roles.PARTICIPANT);
-        user.getRoles().add(Roles.CREATOR);
+        String roleStr = request.getRole();
+
+        try {
+            Roles role = Roles.valueOf(roleStr.toUpperCase());
+            user.setRole(role);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid role: " + roleStr);
+        }
+
         userRepository.save(user);
         userProfile.setUser(user);
         userProfileRepository.save(userProfile);
@@ -79,23 +86,18 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         // Special case for admin login
         if (adminUsername.equals(request.getEmail()) && adminPassword.equals(request.getPassword())) {
-            AppUser adminUser = userRepository.findByEmail(adminUsername)
+            AppUser adminUser = userRepository.findByEmail("admin@yvyr.com")
                     .orElseGet(() -> {
-                        // Create admin user if it doesn't exist
                         AppUser newAdmin = new AppUser();
-                        newAdmin.setEmail(adminUsername);
-                        newAdmin.setPassword(passwordEncoder.encode(adminPassword));
-                        // Initialize roles set if needed
-                        if (newAdmin.getRoles() == null) {
-                            newAdmin.setRoles(new HashSet<>());
-                        }
-                        newAdmin.getRoles().add(Roles.ADMIN);
+                        newAdmin.setEmail("admin@yvyr.com");
+                        newAdmin.setPassword(passwordEncoder.encode("admin123"));
+                        newAdmin.setRole(Roles.ADMIN);  // ✅ Set the role directly
                         return userRepository.save(newAdmin);
                     });
             
             // Ensure admin role is assigned
-            if (!adminUser.getRoles().contains(Roles.ADMIN)) {
-                adminUser.getRoles().add(Roles.ADMIN);
+            if (adminUser.getRole() != Roles.ADMIN) {
+                adminUser.setRole(Roles.ADMIN);
                 userRepository.save(adminUser);
             }
             

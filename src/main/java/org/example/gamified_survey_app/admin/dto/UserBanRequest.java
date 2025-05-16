@@ -11,4 +11,5 @@ public class UserBanRequest {
     private Long userId;
     private String reason;
     private boolean permanent;
-} 
+    private Integer duration; // duration in days (optional if permanent)
+}

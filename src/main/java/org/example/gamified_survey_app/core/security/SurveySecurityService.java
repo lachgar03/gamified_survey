@@ -1,6 +1,7 @@
 package org.example.gamified_survey_app.core.security;
 
 import org.example.gamified_survey_app.auth.model.AppUser;
+import org.example.gamified_survey_app.core.constants.Roles;
 import org.example.gamified_survey_app.survey.model.Survey;
 import org.example.gamified_survey_app.survey.repository.SurveyRepository;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -45,10 +46,11 @@ public class SurveySecurityService {
         
         // Le créateur du sondage ou un admin peut voir les résultats
         boolean isCreator = survey.getCreator().getId().equals(user.getId());
-        boolean isAdmin = user.getRoles().stream()
-                .anyMatch(role -> role.name().equals("ADMIN"));
-        
+        boolean isAdmin = user.getRole() == Roles.ADMIN;
+
         return isCreator || isAdmin;
+
+
     }
     
     /**

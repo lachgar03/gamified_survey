@@ -6,7 +6,10 @@ import org.example.gamified_survey_app.user.dto.UserProfileDto;
 import org.example.gamified_survey_app.user.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/profileManage")
@@ -14,7 +17,15 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    @GetMapping("/role")
+    public ResponseEntity<?> getUserRole(org.springframework.security.core.Authentication authentication){
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+            String role = authentication.getAuthorities().iterator().next().getAuthority();
 
+        return ResponseEntity.ok(Map.of("role", role));
+    }
     @GetMapping("/profile")
     public ResponseEntity<UserProfileDto> getUserProfile() {
         return ResponseEntity.ok(userService.getUserProfile());

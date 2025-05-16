@@ -26,9 +26,9 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé"));
 
         // Convertir Set<Roles> en authorities
-        List<SimpleGrantedAuthority> authorities = utilisateur.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
-                .collect(Collectors.toList());
+        List<SimpleGrantedAuthority> authorities = List.of(
+                new SimpleGrantedAuthority("ROLE_" + utilisateur.getRole().name())
+        );
 
         return User.builder()
                 .username(utilisateur.getEmail())

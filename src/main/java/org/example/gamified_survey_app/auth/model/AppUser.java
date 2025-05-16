@@ -26,9 +26,9 @@ import java.util.Set;
     public int calculateLevel() {
         return xp / 1000; // or any custom level formula
     }
-    @ElementCollection(fetch = FetchType.EAGER)
+
     @Enumerated(EnumType.STRING)
-    private Set<Roles> roles=new HashSet<>();
+    private Roles role;
     
     // Ban fields
     private boolean banned = false;

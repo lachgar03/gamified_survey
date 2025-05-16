@@ -47,9 +47,11 @@ public class SurveyService {
     public SurveyDtos.SurveyResponse createSurvey(SurveyDtos.SurveyRequest request) {
         AppUser creator = getCurrentUser();
 
-        if (!(creator.getRoles().contains(Roles.CREATOR) || creator.getRoles().contains(Roles.ADMIN))) {
+        if (!(creator.getRole() == Roles.CREATOR || creator.getRole() == Roles.ADMIN)) {
             throw new CustomException("Only survey creators can create surveys");
         }
+
+
 
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new CustomException("Category not found"));
@@ -128,7 +130,7 @@ public class SurveyService {
                 .orElseThrow(() -> new CustomException("Survey not found"));
 
         if (!survey.getCreator().getId().equals(currentUser.getId())
-                && !currentUser.getRoles().contains(Roles.ADMIN)) {
+                && currentUser.getRole() != Roles.ADMIN) {
             throw new CustomException("You don't have permission to deactivate this survey");
         }
 
@@ -326,7 +328,7 @@ public class SurveyService {
                 .orElseThrow(() -> new CustomException("Survey not found"));
 
         if (!survey.getCreator().getId().equals(currentUser.getId())
-                && !currentUser.getRoles().contains(Roles.ADMIN)) {
+                && currentUser.getRole() != Roles.ADMIN) {
             throw new CustomException("You don't have permission to delete this survey");
         }
 
@@ -340,7 +342,7 @@ public class SurveyService {
                 .orElseThrow(() -> new CustomException("Survey not found"));
 
         if (!survey.getCreator().getId().equals(currentUser.getId())
-                && !currentUser.getRoles().contains(Roles.ADMIN)) {
+                && currentUser.getRole() != Roles.ADMIN) {
             throw new CustomException("You don't have permission to update this survey");
         }
 
