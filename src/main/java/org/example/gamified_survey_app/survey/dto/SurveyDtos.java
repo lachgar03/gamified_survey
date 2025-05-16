@@ -21,7 +21,6 @@ public class SurveyDtos {
         private Long categoryId;
         private Integer xpReward;
         private Integer minimumTimeSeconds;
-        private Integer maxParticipants;
         private List<QuestionRequest> questions;
     }
 
@@ -58,7 +57,6 @@ public class SurveyDtos {
         private String creatorEmail;
         private String categoryName;
         private Integer xpReward;
-        private Integer maxParticipants;
         private Long responseCount;
     }
 
@@ -77,7 +75,6 @@ public class SurveyDtos {
         private String categoryName;
         private Integer xpReward;
         private Integer minimumTimeSeconds;
-        private Integer maxParticipants;
         private List<QuestionResponse> questions;
         private Long responseCount;
     }

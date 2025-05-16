@@ -52,7 +52,7 @@ public class SecurityConfig {
                                 "/api/surveys/*/deactivate",
                                 "/api/surveys/*/update",
                                 "/api/surveys/*/delete",
-                                "/api/surveys/created",
+                                    "/api/surveys/created",
                                 "/api/surveys/*/results").hasAnyRole("CREATOR", "ADMIN")
 
                         // Participant-specific endpoints
@@ -77,6 +77,7 @@ public class SecurityConfig {
 
                         // Profile management
                         .requestMatchers("/api/profileManage/**").authenticated()
+                        .requestMatchers("/api/users/progression").authenticated()
 
                         // Default - require authentication for all other endpoints
                         .anyRequest().authenticated()

@@ -12,4 +12,6 @@ public interface UserRepository extends JpaRepository<AppUser, Long> {
     Optional<AppUser> findByEmail(String email);
     
     List<AppUser> findByBannedTrue();
+    Optional<Integer> findXpByEmail(String email);
+
 }

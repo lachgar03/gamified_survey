@@ -19,12 +19,7 @@ import org.example.gamified_survey_app.survey.model.QuestionOption;
 import org.example.gamified_survey_app.survey.model.QuestionResponse;
 import org.example.gamified_survey_app.survey.model.Survey;
 import org.example.gamified_survey_app.survey.model.SurveyResponse;
-import org.example.gamified_survey_app.survey.repository.CategoryRepository;
-import org.example.gamified_survey_app.survey.repository.QuestionOptionRepository;
-import org.example.gamified_survey_app.survey.repository.QuestionRepository;
-import org.example.gamified_survey_app.survey.repository.QuestionResponseRepository;
-import org.example.gamified_survey_app.survey.repository.SurveyRepository;
-import org.example.gamified_survey_app.survey.repository.SurveyResponseRepository;
+import org.example.gamified_survey_app.survey.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -68,7 +63,6 @@ public class SurveyService {
         survey.setCategory(category);
         survey.setXpReward(request.getXpReward());
         survey.setMinimumTimeSeconds(request.getMinimumTimeSeconds());
-        survey.setMaxParticipants(request.getMaxParticipants());
         survey.setActive(true);
         survey.setVerified(false);
 
@@ -156,14 +150,6 @@ public class SurveyService {
             throw new CustomException("You have already completed this survey");
         }
         
-        // Check if survey has reached its maximum participants limit
-        if (survey.getMaxParticipants() != null) {
-            Long currentResponseCount = surveyResponseRepository.countResponsesBySurvey(survey);
-            if (currentResponseCount >= survey.getMaxParticipants()) {
-                throw new CustomException("This survey has reached its maximum number of participants");
-            }
-        }
-
         Duration timeSpent = Duration.between(request.getStartedAt(), request.getCompletedAt());
         int timeSpentSeconds = (int) timeSpent.getSeconds();
         
@@ -281,7 +267,6 @@ public class SurveyService {
                 survey.getCreator().getEmail(),
                 survey.getCategory().getName(),
                 survey.getXpReward(),
-                survey.getMaxParticipants(),
                 responseCount
         );
     }
@@ -324,7 +309,6 @@ public class SurveyService {
                 survey.getCategory().getName(),
                 survey.getXpReward(),
                 survey.getMinimumTimeSeconds(),
-                survey.getMaxParticipants(),
                 questionResponses,
                 responseCount
         );

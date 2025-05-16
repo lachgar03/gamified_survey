@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 public class ForumController {
 
     private final ForumService forumService;
-
     @PostMapping("/forums")
     public ResponseEntity<SurveyDtos.ForumResponse> createForum(@RequestBody SurveyDtos.ForumRequest request) {
         return ResponseEntity.ok(forumService.createForum(request));

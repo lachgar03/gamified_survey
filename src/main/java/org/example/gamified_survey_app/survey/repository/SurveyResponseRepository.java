@@ -8,11 +8,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
 public interface SurveyResponseRepository extends JpaRepository<SurveyResponse, Long> {
     List<SurveyResponse> findBySurvey(Survey survey);
+    List<SurveyResponse> findBySurveyId(Long surveyId);
 
     List<org.example.gamified_survey_app.survey.model.SurveyResponse> findByUser(AppUser user);
 
@@ -26,5 +29,12 @@ public interface SurveyResponseRepository extends JpaRepository<SurveyResponse, 
 
     @Query("SELECT AVG(sr.timeSpentSeconds) FROM SurveyResponse sr WHERE sr.survey = :survey")
     Double averageTimeSpentBySurvey(@Param("survey") Survey survey);
+
+    @Query("SELECT sr FROM SurveyResponse sr WHERE sr.user = :user AND FUNCTION('DATE', sr.completedAt) = :date")
+    List<SurveyResponse> findByUserAndCompletedAtDate(@Param("user") AppUser user, @Param("date") LocalDate date);
+
+    @Query("SELECT COUNT(sr) FROM SurveyResponse sr WHERE sr.user = :user AND FUNCTION('DATE', sr.completedAt) = :date")
+    int countByUserAndDate(@Param("user") AppUser user, @Param("date") LocalDate date);
+
 
 }

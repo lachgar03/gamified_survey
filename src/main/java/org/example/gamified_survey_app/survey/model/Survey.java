@@ -43,8 +43,7 @@ public class Survey {
 
     private Integer minimumTimeSeconds = 60;
     
-    // Max participants field to limit the number of responses
-    private Integer maxParticipants;
+
     
     // Method to enable forum
     public void enableForum(String title, String description) {

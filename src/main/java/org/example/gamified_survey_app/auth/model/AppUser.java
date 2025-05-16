@@ -14,16 +14,18 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AppUser {
+    public class AppUser {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @Column(unique = true)
-    private String email;
-    private String password;
-    private int xp;
-
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+        @Column(unique = true)
+        private String email;
+        private String password;
+        private int xp;
+    public int calculateLevel() {
+        return xp / 1000; // or any custom level formula
+    }
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     private Set<Roles> roles=new HashSet<>();
