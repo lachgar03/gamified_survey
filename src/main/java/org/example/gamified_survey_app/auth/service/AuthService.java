@@ -96,20 +96,23 @@ public class AuthService {
         // Use the injected UserDetailsService to load user details
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtUtils.generateToken(userDetails);
-
+        leaderboardService.updateUserXp(user,0);
         if (request.getReferralCode() != null) {
             List<Referral> referal = referralRepository.findByReferralCode(request.getReferralCode());
-            if (referal.isEmpty()) {
-                throw new CustomException("Invalid referral code");
-            }else {
-                Referral referral = referal.get(0);
-                referral.setReferee(user);
-                referralRepository.save(referral);
-                referralService.awardReferralBonus(referral.getReferee(),15);
+            try {
+                if (referal.isEmpty() || referal.getFirst().getReferee() != null) {
+                    throw new CustomException("Invalid referral code");
+                } else {
+                    Referral referral = referal.getFirst();
+                    referral.setReferee(user);
+                    referralRepository.save(referral);
+                    referralService.awardReferralBonus(referral.getReferee(), 15);
+                }
+            } catch (CustomException e) {
+                // Handle exception (log, continue, etc.)
+                System.out.println("Caught exception: " + e.getMessage());
             }
-
         }
-        leaderboardService.updateUserXp(user,0);
         return new AuthResponse(token, user);
     }
 
