@@ -13,5 +13,7 @@ public class LevelDTO {
     private Integer number;
     private Integer pointsThreshold;
     private String description;
-    private String badgeUrl;
-} 
+
+    // ✅ New field
+    private String avatarUrl;
+}

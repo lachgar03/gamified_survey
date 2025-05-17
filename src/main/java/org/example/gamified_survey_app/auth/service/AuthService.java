@@ -2,8 +2,10 @@ package org.example.gamified_survey_app.auth.service;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 
+import org.apache.logging.log4j.Level;
 import org.example.gamified_survey_app.auth.dto.AuthResponse;
 import org.example.gamified_survey_app.auth.dto.LoginRequest;
 import org.example.gamified_survey_app.auth.dto.PasswordResetDto;
@@ -16,8 +18,13 @@ import org.example.gamified_survey_app.core.constants.Roles;
 import org.example.gamified_survey_app.core.exception.CustomException;
 import org.example.gamified_survey_app.core.service.EmailService;
 import org.example.gamified_survey_app.core.util.JwtUtils;
+import org.example.gamified_survey_app.gamification.repository.LevelRepository;
+import org.example.gamified_survey_app.gamification.service.LeaderboardService;
+import org.example.gamified_survey_app.user.model.Referral;
 import org.example.gamified_survey_app.user.model.UserProfile;
+import org.example.gamified_survey_app.user.repository.ReferralRepository;
 import org.example.gamified_survey_app.user.repository.UserProfileRepository;
+import org.example.gamified_survey_app.user.service.ReferralService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -39,11 +46,16 @@ public class AuthService {
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
-    private final EmailService emailService;
+            private final EmailService emailService;
+    private final LevelRepository levelRepository;
 
     // Token expiration time in minutes
     private static final int RESET_TOKEN_EXPIRATION_MINUTES = 30;
-    
+    private final ReferralRepository referralRepository;
+    private final ReferralService referralService;
+    private final LeaderboardService leaderboardService;
+
+
     @Value("${admin.username:admin@example.com}")
     private String adminUsername;
     
@@ -63,6 +75,8 @@ public class AuthService {
         userProfile.setPhoneNumber(null);
         userProfile.setRegion(null);
         user.setEmail(request.getEmail());
+
+
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         String roleStr = request.getRole();
 
@@ -72,6 +86,8 @@ public class AuthService {
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid role: " + roleStr);
         }
+        user.setXp(0);
+        user.setLevel(levelRepository.findByNumber(1).orElseThrow(() -> new CustomException("Level not found")));
 
         userRepository.save(user);
         userProfile.setUser(user);
@@ -80,6 +96,20 @@ public class AuthService {
         // Use the injected UserDetailsService to load user details
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtUtils.generateToken(userDetails);
+
+        if (request.getReferralCode() != null) {
+            List<Referral> referal = referralRepository.findByReferralCode(request.getReferralCode());
+            if (referal.isEmpty()) {
+                throw new CustomException("Invalid referral code");
+            }else {
+                Referral referral = referal.get(0);
+                referral.setReferee(user);
+                referralRepository.save(referral);
+                referralService.awardReferralBonus(referral.getReferee(),15);
+            }
+
+        }
+        leaderboardService.updateUserXp(user,0);
         return new AuthResponse(token, user);
     }
 
@@ -92,6 +122,10 @@ public class AuthService {
                         newAdmin.setEmail("admin@yvyr.com");
                         newAdmin.setPassword(passwordEncoder.encode("admin123"));
                         newAdmin.setRole(Roles.ADMIN);  // ✅ Set the role directly
+                        // set level
+                        newAdmin.setLevel(levelRepository.findByNumber(1).orElseThrow(() -> new CustomException("Level not found")));
+
+
                         return userRepository.save(newAdmin);
                     });
             

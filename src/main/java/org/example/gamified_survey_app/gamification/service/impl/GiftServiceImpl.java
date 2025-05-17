@@ -7,6 +7,7 @@ import org.example.gamified_survey_app.gamification.model.GiftRedemption;
 import org.example.gamified_survey_app.gamification.repository.GiftRedemptionRepository;
 import org.example.gamified_survey_app.gamification.repository.GiftRepository;
 import org.example.gamified_survey_app.gamification.service.GiftService;
+import org.example.gamified_survey_app.gamification.service.UserXpService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +21,13 @@ public class GiftServiceImpl implements GiftService {
 
     private final GiftRepository giftRepository;
     private final GiftRedemptionRepository redemptionRepository;
+    private final UserXpService userXpService;
 
     @Autowired
-    public GiftServiceImpl(GiftRepository giftRepository, GiftRedemptionRepository redemptionRepository) {
+    public GiftServiceImpl(GiftRepository giftRepository, GiftRedemptionRepository redemptionRepository, UserXpService userXpService) {
         this.giftRepository = giftRepository;
         this.redemptionRepository = redemptionRepository;
+        this.userXpService = userXpService;
     }
 
     @Override
@@ -103,8 +106,7 @@ public class GiftServiceImpl implements GiftService {
         giftRepository.save(gift);
         
         // Update user points
-        user.setXp(user.getXp() - gift.getPointsCost());
-        
+        userXpService.updateUserXp(user , user.getXp() - gift.getPointsCost());
         // Save redemption
         return redemptionRepository.save(redemption);
     }
@@ -130,7 +132,7 @@ public class GiftServiceImpl implements GiftService {
             redemption.getStatus() != GiftRedemption.RedemptionStatus.CANCELLED) {
             
             AppUser user = redemption.getUser();
-            user.setXp(user.getXp() + redemption.getPointsSpent());
+            userXpService.updateUserXp(user, redemption.getPointsSpent());
             
             Gift gift = redemption.getGift();
             gift.setAvailableQuantity(gift.getAvailableQuantity() + 1);

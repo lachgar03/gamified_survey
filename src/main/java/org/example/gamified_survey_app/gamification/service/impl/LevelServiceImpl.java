@@ -65,7 +65,7 @@ public class LevelServiceImpl implements LevelService {
         level.setNumber(levelDetails.getNumber());
         level.setPointsThreshold(levelDetails.getPointsThreshold());
         level.setDescription(levelDetails.getDescription());
-        level.setBadgeUrl(levelDetails.getBadgeUrl());
+        level.setAvatarUrl(levelDetails.getAvatarUrl());
         
         return levelRepository.save(level);
     }

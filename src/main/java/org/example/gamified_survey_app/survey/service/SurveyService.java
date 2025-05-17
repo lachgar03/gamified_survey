@@ -12,6 +12,7 @@ import org.example.gamified_survey_app.core.constants.Roles;
 import org.example.gamified_survey_app.core.exception.CustomException;
 import org.example.gamified_survey_app.core.service.FraudDetectionService;
 import org.example.gamified_survey_app.gamification.service.LeaderboardService;
+import org.example.gamified_survey_app.gamification.service.UserXpService;
 import org.example.gamified_survey_app.survey.dto.SurveyDtos;
 import org.example.gamified_survey_app.survey.model.Category;
 import org.example.gamified_survey_app.survey.model.Question;
@@ -42,6 +43,7 @@ public class SurveyService {
     private final UserRepository userRepository;
     private final LeaderboardService leaderboardService;
     private final FraudDetectionService fraudDetectionService;
+    private final UserXpService userXpServixe;
 
     @Transactional
     public SurveyDtos.SurveyResponse createSurvey(SurveyDtos.SurveyRequest request) {
@@ -225,7 +227,7 @@ public class SurveyService {
         }
 
         if (!isSuspicious) {
-            updateUserXp(currentUser, xpAwarded);
+            userXpServixe.updateUserXp(currentUser, xpAwarded);
         }
 
         return new SurveyDtos.SurveyResponseSummary(
@@ -238,16 +240,7 @@ public class SurveyService {
         );
     }
 
-    @Transactional
-    public void updateUserXp(AppUser user, int xpToAdd) {
-        user.setXp(user.getXp() + xpToAdd);
-        userRepository.save(user);
-        
-        // Update the user's position in the leaderboards
-        leaderboardService.updateUserXp(user, xpToAdd);
-        
-        System.out.println("Awarded " + xpToAdd + " XP to user " + user.getEmail());
-    }
+
 
     private AppUser getCurrentUser() {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

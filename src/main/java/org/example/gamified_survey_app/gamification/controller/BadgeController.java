@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,7 +46,6 @@ public class BadgeController {
     public ResponseEntity<BadgeDTO> createBadge(@RequestBody BadgeDTO badgeDTO) {
         Badge badge = new Badge();
         updateBadgeFromDTO(badge, badgeDTO);
-        
         Badge savedBadge = badgeService.createBadge(badge);
         return ResponseEntity.ok(convertToDTO(savedBadge));
     }
@@ -56,9 +54,8 @@ public class BadgeController {
     public ResponseEntity<BadgeDTO> updateBadge(@PathVariable Long id, @RequestBody BadgeDTO badgeDTO) {
         Badge badge = badgeService.getBadgeById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Badge not found with id: " + id));
-        
+
         updateBadgeFromDTO(badge, badgeDTO);
-        
         Badge updatedBadge = badgeService.updateBadge(id, badge);
         return ResponseEntity.ok(convertToDTO(updatedBadge));
     }
@@ -74,7 +71,7 @@ public class BadgeController {
         List<UserBadgeDTO> badges = badgeService.getUserBadges(user).stream()
                 .map(this::convertToUserBadgeDTO)
                 .collect(Collectors.toList());
-        
+
         return ResponseEntity.ok(badges);
     }
 
@@ -82,8 +79,17 @@ public class BadgeController {
     public ResponseEntity<UserBadgeDTO> awardBadge(
             @AuthenticationPrincipal AppUser user,
             @PathVariable Long badgeId) {
-        
+
         UserBadge userBadge = badgeService.awardBadge(user, badgeId);
+        return ResponseEntity.ok(convertToUserBadgeDTO(userBadge));
+    }
+
+    @PostMapping("/claim/{userBadgeId}")
+    public ResponseEntity<UserBadgeDTO> claimReward(
+            @AuthenticationPrincipal AppUser user,
+            @PathVariable Long userBadgeId) {
+
+        UserBadge userBadge = badgeService.claimBadgeReward(user, userBadgeId);
         return ResponseEntity.ok(convertToUserBadgeDTO(userBadge));
     }
 
@@ -91,7 +97,7 @@ public class BadgeController {
     public ResponseEntity<Boolean> hasUserEarnedBadge(
             @AuthenticationPrincipal AppUser user,
             @PathVariable Long badgeId) {
-        
+
         boolean hasEarned = badgeService.hasUserEarnedBadge(user, badgeId);
         return ResponseEntity.ok(hasEarned);
     }
@@ -102,7 +108,12 @@ public class BadgeController {
                 badge.getName(),
                 badge.getDescription(),
                 badge.getImageUrl(),
-                badge.getAchievementCondition()
+                badge.getAchievementCondition(),
+                badge.getTargetValue(),
+                badge.getActionType(),
+                badge.getPeriod(), // ✅ Added
+                null, false, null,
+                false, null
         );
     }
 
@@ -111,15 +122,30 @@ public class BadgeController {
         badge.setDescription(dto.getDescription());
         badge.setImageUrl(dto.getImageUrl());
         badge.setAchievementCondition(dto.getAchievementCondition());
+        badge.setActionType(dto.getActionType());
+        badge.setTargetValue(dto.getTargetValue());
+        badge.setPeriod(dto.getPeriod()); // ✅ Added
     }
 
-    private UserBadgeDTO convertToUserBadgeDTO(UserBadge userBadge) {
+    private UserBadgeDTO convertToUserBadgeDTO(UserBadge ub) {
+        BadgeDTO badgeDTO = convertToDTO(ub.getBadge());
+        badgeDTO.setCurrentValue(ub.getCurrentValue());
+        badgeDTO.setCompleted(ub.isCompleted());
+        badgeDTO.setCompletedAt(ub.getCompletedAt());
+        badgeDTO.setRewardClaimed(ub.isRewardClaimed());
+        badgeDTO.setRewardClaimedAt(ub.getRewardClaimedAt());
+
         return new UserBadgeDTO(
-                userBadge.getId(),
-                userBadge.getUser().getId(),
-                userBadge.getUser().getEmail(),
-                convertToDTO(userBadge.getBadge()),
-                userBadge.getEarnedAt()
+                ub.getId(),
+                ub.getUser().getId(),
+                ub.getUser().getEmail(),
+                badgeDTO,
+                ub.getCurrentValue(),
+                ub.isCompleted(),
+                ub.getCompletedAt(),
+                ub.isRewardClaimed(),
+                ub.getRewardClaimedAt(),
+                ub.getStartedAt()
         );
     }
-} 
+}

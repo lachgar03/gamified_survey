@@ -1,31 +1,25 @@
 package org.example.gamified_survey_app.gamification.service.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.example.gamified_survey_app.auth.model.AppUser;
-import org.example.gamified_survey_app.core.exception.ResourceNotFoundException;
+import org.example.gamified_survey_app.gamification.constant.ChallengeType;
 import org.example.gamified_survey_app.gamification.model.Badge;
 import org.example.gamified_survey_app.gamification.model.UserBadge;
 import org.example.gamified_survey_app.gamification.repository.BadgeRepository;
 import org.example.gamified_survey_app.gamification.repository.UserBadgeRepository;
 import org.example.gamified_survey_app.gamification.service.BadgeService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class BadgeServiceImpl implements BadgeService {
 
     private final BadgeRepository badgeRepository;
     private final UserBadgeRepository userBadgeRepository;
-
-    @Autowired
-    public BadgeServiceImpl(BadgeRepository badgeRepository, UserBadgeRepository userBadgeRepository) {
-        this.badgeRepository = badgeRepository;
-        this.userBadgeRepository = userBadgeRepository;
-    }
 
     @Override
     public List<Badge> getAllBadges() {
@@ -45,13 +39,11 @@ public class BadgeServiceImpl implements BadgeService {
     @Override
     public Badge updateBadge(Long id, Badge badgeDetails) {
         Badge badge = badgeRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Badge not found with id: " + id));
-        
+                .orElseThrow(() -> new RuntimeException("Badge not found"));
         badge.setName(badgeDetails.getName());
         badge.setDescription(badgeDetails.getDescription());
         badge.setImageUrl(badgeDetails.getImageUrl());
         badge.setAchievementCondition(badgeDetails.getAchievementCondition());
-        
         return badgeRepository.save(badge);
     }
 
@@ -66,29 +58,104 @@ public class BadgeServiceImpl implements BadgeService {
     }
 
     @Override
-    @Transactional
+    public List<UserBadge> getCompletedBadges(AppUser user) {
+        return userBadgeRepository.findByUserAndCompletedTrue(user);
+    }
+
+    @Override
+    public List<UserBadge> getInProgressBadges(AppUser user) {
+        return userBadgeRepository.findByUserAndCompletedFalse(user);
+    }
+
+    @Override
+    public List<UserBadge> getUnclaimedBadges(AppUser user) {
+        return userBadgeRepository.findByUserAndCompletedTrueAndRewardClaimedFalse(user);
+    }
+
+    @Override
     public UserBadge awardBadge(AppUser user, Long badgeId) {
-        // Check if user already has this badge
-        if (hasUserEarnedBadge(user, badgeId)) {
-            throw new IllegalStateException("User already has this badge");
+        Optional<UserBadge> existing = userBadgeRepository.findByUserAndBadgeId(user, badgeId);
+        if (existing.isPresent()) {
+            return existing.get();
         }
-        
+
         Badge badge = badgeRepository.findById(badgeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Badge not found with id: " + badgeId));
-        
+                .orElseThrow(() -> new RuntimeException("Badge not found"));
+
         UserBadge userBadge = new UserBadge();
         userBadge.setUser(user);
         userBadge.setBadge(badge);
-        userBadge.setEarnedAt(LocalDateTime.now());
-        
+        userBadge.setStartedAt(LocalDateTime.now());
+        userBadge.setCurrentValue(0);
+        userBadge.setCompleted(false);
+        userBadge.setRewardClaimed(false);
+
         return userBadgeRepository.save(userBadge);
     }
 
     @Override
     public boolean hasUserEarnedBadge(AppUser user, Long badgeId) {
-        Badge badge = badgeRepository.findById(badgeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Badge not found with id: " + badgeId));
-        
-        return userBadgeRepository.existsByUserAndBadge(user, badge);
+        return userBadgeRepository.findByUserAndBadgeId(user, badgeId)
+                .map(UserBadge::isCompleted)
+                .orElse(false);
     }
-} 
+
+    @Override
+    public UserBadge claimBadgeReward(AppUser user, Long userBadgeId) {
+        UserBadge userBadge = userBadgeRepository.findById(userBadgeId)
+                .orElseThrow(() -> new RuntimeException("UserBadge not found"));
+
+        if (!userBadge.getUser().getId().equals(user.getId()) || !userBadge.isCompleted()) {
+            throw new RuntimeException("Cannot claim reward");
+        }
+
+        userBadge.setRewardClaimed(true);
+        userBadge.setRewardClaimedAt(LocalDateTime.now());
+
+        return userBadgeRepository.save(userBadge);
+    }
+
+    @Override
+    public void updateBadgeProgress(AppUser user, ChallengeType type, int value, String extraData) {
+        List<UserBadge> userBadges = userBadgeRepository.findByUser(user);
+
+        for (UserBadge userBadge : userBadges) {
+            if (userBadge.isCompleted()) continue;
+
+            Badge badge = userBadge.getBadge();
+            if (!badge.getAchievementCondition().contains(type.name())) continue;
+
+            int newValue = userBadge.getCurrentValue() + value;
+            userBadge.setCurrentValue(newValue);
+
+            // For now assume each badge completion threshold is 100
+            if (newValue >= 100) {
+                userBadge.setCompleted(true);
+                userBadge.setCompletedAt(LocalDateTime.now());
+            }
+
+            userBadgeRepository.save(userBadge);
+        }
+    }
+
+    @Override
+    public int assignBadgesToUser(AppUser user) {
+        List<Badge> all = badgeRepository.findAll();
+        int count = 0;
+
+        for (Badge badge : all) {
+            if (userBadgeRepository.findByUserAndBadgeId(user, badge.getId()).isEmpty()) {
+                UserBadge userBadge = new UserBadge();
+                userBadge.setUser(user);
+                userBadge.setBadge(badge);
+                userBadge.setStartedAt(LocalDateTime.now());
+                userBadge.setCurrentValue(0);
+                userBadge.setCompleted(false);
+                userBadge.setRewardClaimed(false);
+                userBadgeRepository.save(userBadge);
+                count++;
+            }
+        }
+        return count;
+    }
+}

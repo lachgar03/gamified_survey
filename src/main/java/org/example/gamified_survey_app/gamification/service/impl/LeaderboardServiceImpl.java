@@ -96,7 +96,7 @@ public class LeaderboardServiceImpl implements LeaderboardService {
                 
             case GLOBAL:
                 // Global leaderboard has no end date
-                return LocalDateTime.MAX;
+                return LocalDateTime.of(5000, 1, 1, 0, 0);
                 
             default:
                 throw new IllegalArgumentException("Unsupported leaderboard period: " + period);

@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.example.gamified_survey_app.auth.model.AppUser;
-import org.example.gamified_survey_app.auth.repository.UserRepository;
 import org.example.gamified_survey_app.core.exception.CustomException;
+import org.example.gamified_survey_app.gamification.service.UserXpService;
 import org.example.gamified_survey_app.user.model.Referral;
 import org.example.gamified_survey_app.user.repository.ReferralRepository;
 import org.example.gamified_survey_app.user.service.ReferralService;
@@ -23,9 +23,9 @@ public class ReferralServiceImpl implements ReferralService {
     
     private static final Logger log = LoggerFactory.getLogger(ReferralServiceImpl.class);
     private final ReferralRepository referralRepository;
-    private final UserRepository userRepository;
-    
+
     private static final int REFERRAL_BONUS_XP = 50;
+    private final UserXpService userXpService;
 
     @Override
     @Transactional
@@ -65,7 +65,7 @@ public class ReferralServiceImpl implements ReferralService {
             return null;
         }
         
-        Referral referral = referrals.get(0);
+        Referral referral = referrals.getFirst();
         
         // Ensure the referrer is not the same as the referee
         if (referral.getReferrer().getEmail().equals(newUser.getEmail())) {
@@ -104,22 +104,21 @@ public class ReferralServiceImpl implements ReferralService {
         
         // Find the referral for this user
         Referral referral = referralRepository.findByReferee(referee).orElse(null);
-        
+
         if (referral == null || referral.isBonusAwarded()) {
             log.debug("No applicable referral found or bonus already awarded");
             return;
         }
-        
-        AppUser referrer = referral.getReferrer();
-        
+
+        AppUser user = referral.getReferrer();
+
         // Award XP to the referrer
         int bonusXp = (int)(xpAmount * 0.1); // 10% of the XP earned by referee
         if (bonusXp < REFERRAL_BONUS_XP) {
             bonusXp = REFERRAL_BONUS_XP; // Minimum bonus
         }
         
-        referrer.setXp(referrer.getXp() + bonusXp);
-        userRepository.save(referrer);
+
         
         // Mark the bonus as awarded
         referral.setBonusAwarded(true);
@@ -127,7 +126,12 @@ public class ReferralServiceImpl implements ReferralService {
         referral.setXpAwarded(bonusXp);
         
         referralRepository.save(referral);
-        
-        log.info("Awarded {} bonus XP to referrer: {}", bonusXp, referrer.getEmail());
+         userXpService.updateUserXp(user , bonusXp);
+
+        log.info("Awarded {} bonus XP to referrer: {}", bonusXp, user.getEmail());
+    }
+    @Override
+    public List<Referral> getReferralByCode(String referralCode) {
+        return referralRepository.findByReferralCode(referralCode);
     }
 } 

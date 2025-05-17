@@ -47,6 +47,8 @@ public interface ReferralService {
      * @return The number of referrals
      */
     Long getReferralCount(AppUser referrer);
+
+    List<Referral> getReferralByCode(String referralCode);
     
     /**
      * Awards XP bonus for referrals when a referred user completes certain actions

@@ -1,24 +1,23 @@
 package org.example.gamified_survey_app.gamification.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.example.gamified_survey_app.auth.model.AppUser;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class Level {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
     private String name;
     private Integer number;
     private Integer pointsThreshold;
     private String description;
-    
-    // Optional: Badge or icon URL for this level
-    private String badgeUrl;
+    private String avatarUrl;
+
 } 

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.gamified_survey_app.core.constants.Roles;
+import org.example.gamified_survey_app.gamification.model.Level;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,10 +29,16 @@ public class AppUser implements UserDetails {
 
     private String password;
     private int xp;
+    @ManyToOne
+    @JoinColumn(name = "level_id")
+    private Level level;
+    private LocalDateTime levelUpAt;
 
-    public int calculateLevel() {
-        return xp / 1000; // or any custom level formula
-    }
+
+
+
+
+
 
     @Enumerated(EnumType.STRING)
     private Roles role;
@@ -41,6 +48,7 @@ public class AppUser implements UserDetails {
     private String banReason;
     private LocalDateTime bannedAt;
     private LocalDateTime banExpiresAt;
+
 
     public boolean isBanActive() {
         if (!banned) {
@@ -79,5 +87,8 @@ public class AppUser implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+    public LocalDateTime setLevelUpAt() {
+        return LocalDateTime.now();
     }
 }

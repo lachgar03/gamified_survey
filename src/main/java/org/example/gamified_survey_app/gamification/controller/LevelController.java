@@ -83,7 +83,7 @@ public class LevelController {
                 level.getNumber(),
                 level.getPointsThreshold(),
                 level.getDescription(),
-                level.getBadgeUrl()
+                level.getAvatarUrl() // ✅ include avatar
         );
     }
 
@@ -92,6 +92,6 @@ public class LevelController {
         level.setNumber(dto.getNumber());
         level.setPointsThreshold(dto.getPointsThreshold());
         level.setDescription(dto.getDescription());
-        level.setBadgeUrl(dto.getBadgeUrl());
+        level.setAvatarUrl(dto.getAvatarUrl()); // ✅ include avatar
     }
 } 

@@ -14,5 +14,13 @@ public class UserBadgeDTO {
     private Long userId;
     private String userName;
     private BadgeDTO badge;
-    private LocalDateTime earnedAt;
-} 
+
+    private Integer currentValue;
+    private boolean completed;
+    private LocalDateTime completedAt;
+
+    private boolean rewardClaimed;
+    private LocalDateTime rewardClaimedAt;
+
+    private LocalDateTime startedAt;
+}

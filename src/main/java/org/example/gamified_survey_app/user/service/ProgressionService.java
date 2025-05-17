@@ -37,7 +37,7 @@ public class ProgressionService {
         }
 
         return new ProgressionResponseDto(
-                new ProgressionResponseDto.UserStats(user.getXp(), user.calculateLevel()),
+                new ProgressionResponseDto.UserStats(user.getXp(), user.getLevel().getNumber()),
                 data,
                 generateMilestones(user, data)
         );
@@ -55,7 +55,7 @@ public class ProgressionService {
         if (user.getXp() >= 1000) {
             milestones.add(new ProgressionResponseDto.MilestoneDto(
                     "LEVEL_UP",
-                    "Reached Level " + user.calculateLevel(),
+                    "Reached Level " + user.getLevel().getNumber(),
                     LocalDate.now().toString()
             ));
         }
