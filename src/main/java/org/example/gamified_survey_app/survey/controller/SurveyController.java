@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -116,6 +117,13 @@ public class SurveyController {
         log.info("Suppression du sondage: {}", id);
         surveyService.deleteSurvey(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/survey-answer-history")
+    public ResponseEntity<List<SurveyDtos.SurveyResponseSummary>> getUserSurveyAnswerHistory(
+            @AuthenticationPrincipal(expression = "id") Long userId) {
+        List<SurveyDtos.SurveyResponseSummary> history = surveyService.getUserSurveyAnswerHistory(userId);
+        return ResponseEntity.ok(history);
     }
 
 }

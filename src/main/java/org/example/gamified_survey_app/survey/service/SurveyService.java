@@ -43,7 +43,7 @@ public class SurveyService {
     private final UserRepository userRepository;
     private final LeaderboardService leaderboardService;
     private final FraudDetectionService fraudDetectionService;
-    private final UserXpService userXpServixe;
+    private final UserXpService userXpService;
 
     @Transactional
     public SurveyDtos.SurveyResponse createSurvey(SurveyDtos.SurveyRequest request) {
@@ -112,6 +112,10 @@ public class SurveyService {
         if (survey.getCreator().getId().equals(currentUser.getId())) {
             throw new CustomException("can t participate in your own survey");
         }
+        SurveyResponse surveyResponse = surveyResponseRepository.findBySurveyAndUser(survey, currentUser);
+       if (surveyResponse.getCompletedAt() != null) {
+           throw new CustomException("You can't participate many times");
+       }
 
         if (surveyResponseRepository.findBySurveyAndUser(survey, currentUser) == null) {
             SurveyResponse response = new SurveyResponse();
@@ -241,7 +245,7 @@ public class SurveyService {
         }
         // Update user's XP
         if (xpAwarded > 0) {
-            userXpServixe.updateUserXp(currentUser, xpAwarded);
+            userXpService.updateUserXp(currentUser, xpAwarded);
         }
 
 
@@ -384,4 +388,19 @@ public class SurveyService {
                 averageTimeSpent
         );
     }
+    public List<SurveyDtos.SurveyResponseSummary> getUserSurveyAnswerHistory(Long userId) {
+        List<SurveyResponse> responses = surveyResponseRepository.findByUserId(userId);
+
+        return responses.stream()
+                .map(response -> new SurveyDtos.SurveyResponseSummary(
+                        response.getId(),
+                        response.getSurvey().getTitle(),
+                        response.getCompletedAt(),
+                        response.getXpAwarded(),
+                        response.isFlaggedAsSuspicious(),
+                        response.getTimeSpentSeconds()
+                ))
+                .collect(Collectors.toList());
+    }
+
 }
