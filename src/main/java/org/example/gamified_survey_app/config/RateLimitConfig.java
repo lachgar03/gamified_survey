@@ -22,7 +22,7 @@ import java.io.IOException;
 @Configuration
 public class RateLimitConfig {
 
-    private static final int MAX_REQUESTS_PER_MINUTE = 60;
+    private static final int MAX_REQUESTS_PER_MINUTE = 500;
     private static final int MAX_REQUESTS_PER_HOUR = 1000;
 
     @Bean
