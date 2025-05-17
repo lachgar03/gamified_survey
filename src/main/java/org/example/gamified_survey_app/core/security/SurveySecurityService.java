@@ -12,9 +12,9 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class SurveySecurityService {
-    
+
     private final SurveyRepository surveyRepository;
-    
+
     /**
      * Vérifie si l'utilisateur est le créateur du sondage
      */
@@ -22,13 +22,13 @@ public class SurveySecurityService {
         if (!(principal instanceof AppUser)) {
             return false;
         }
-        
+
         AppUser user = (AppUser) principal;
         return surveyRepository.findById(surveyId)
                 .map(survey -> survey.getCreator().getId().equals(user.getId()))
                 .orElse(false);
     }
-    
+
     /**
      * Vérifie si l'utilisateur peut voir les résultats d'un sondage
      */
@@ -36,27 +36,30 @@ public class SurveySecurityService {
         if (!(principal instanceof AppUser)) {
             return false;
         }
-        
+        // Vérifie si l'utilisateur est authentifié
+        System.out.println("verufu2");
+
         AppUser user = (AppUser) principal;
         Survey survey = surveyRepository.findById(surveyId).orElse(null);
-        
+
         if (survey == null) {
             return false;
         }
-        
+
         // Le créateur du sondage ou un admin peut voir les résultats
         boolean isCreator = survey.getCreator().getId().equals(user.getId());
+        System.out.println("isCreator: " + isCreator);
         boolean isAdmin = user.getRole() == Roles.ADMIN;
 
         return isCreator || isAdmin;
 
 
     }
-    
+
     /**
      * Vérifie si l'utilisateur peut modifier un sondage
      */
     public boolean canEditSurvey(Long surveyId, UserDetails principal) {
         return isCreator(surveyId, principal);
     }
-} 
+}
