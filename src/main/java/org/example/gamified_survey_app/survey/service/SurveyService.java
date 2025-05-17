@@ -103,8 +103,23 @@ public class SurveyService {
     }
 
     public SurveyDtos.SurveyDetailResponse getSurveyById(Long id) {
+        AppUser currentUser = getCurrentUser();
         Survey survey = surveyRepository.findById(id)
                 .orElseThrow(() -> new CustomException("Survey not found"));
+        if (!survey.isActive() || survey.getExpiresAt().isBefore(LocalDateTime.now()) ) {
+            throw new CustomException("This survey is no longer active");
+        }
+        if (survey.getCreator().getId().equals(currentUser.getId())) {
+            throw new CustomException("can t participate in your own survey");
+        }
+
+        if (surveyResponseRepository.findBySurveyAndUser(survey, currentUser) == null) {
+            SurveyResponse response = new SurveyResponse();
+            response.setSurvey(survey);
+            response.setUser(currentUser);
+            response.setStartedAt(LocalDateTime.now());
+            surveyResponseRepository.save(response);
+        }
         return mapToSurveyDetailResponse(survey);
     }
 
@@ -145,34 +160,33 @@ public class SurveyService {
         AppUser currentUser = getCurrentUser();
         Survey survey = surveyRepository.findById(request.getSurveyId())
                 .orElseThrow(() -> new CustomException("Survey not found"));
+        SurveyResponse surveyResponse = surveyResponseRepository.findBySurveyAndUser(survey, currentUser);
+
 
         if (!survey.isActive() || survey.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new CustomException("This survey is no longer active");
         }
 
-        if (surveyResponseRepository.existsBySurveyAndUser(survey, currentUser)) {
+        if (surveyResponse.getCompletedAt() != null) {
             throw new CustomException("You have already completed this survey");
         }
-        
-        Duration timeSpent = Duration.between(request.getStartedAt(), request.getCompletedAt());
+
+
+        Duration timeSpent = Duration.between(surveyResponse.getStartedAt(), LocalDateTime.now());
         int timeSpentSeconds = (int) timeSpent.getSeconds();
         
         // Use fraud detection service to check for suspicious responses
         boolean isSuspicious = fraudDetectionService.isSuspiciousResponse(
             survey, timeSpentSeconds, currentUser);
-        
+
         int xpAwarded = isSuspicious ? 0 : survey.getXpReward();
 
-        SurveyResponse response = new SurveyResponse();
-        response.setSurvey(survey);
-        response.setUser(currentUser);
-        response.setStartedAt(request.getStartedAt());
-        response.setCompletedAt(request.getCompletedAt());
-        response.setTimeSpentSeconds(timeSpentSeconds);
-        response.setFlaggedAsSuspicious(isSuspicious);
-        response.setXpAwarded(xpAwarded);
+        surveyResponse.setCompletedAt(request.getCompletedAt());
+        surveyResponse.setTimeSpentSeconds(timeSpentSeconds);
+        surveyResponse.setFlaggedAsSuspicious(isSuspicious);
+        surveyResponse.setXpAwarded(xpAwarded);
 
-        SurveyResponse savedResponse = surveyResponseRepository.save(response);
+        SurveyResponse savedResponse = surveyResponseRepository.save(surveyResponse);
 
         if (request.getResponses() != null) {
             for (SurveyDtos.QuestionResponseRequest questionResponseRequest : request.getResponses()) {
@@ -225,10 +239,12 @@ public class SurveyService {
             fraudDetectionService.flagUser(currentUser, 
                 "Suspicious response patterns detected in survey ID: " + survey.getId());
         }
-
-        if (!isSuspicious) {
+        // Update user's XP
+        if (xpAwarded > 0) {
             userXpServixe.updateUserXp(currentUser, xpAwarded);
         }
+
+
 
         return new SurveyDtos.SurveyResponseSummary(
                 savedResponse.getId(),

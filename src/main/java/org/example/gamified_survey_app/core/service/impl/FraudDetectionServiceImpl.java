@@ -47,6 +47,7 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
     public boolean isSuspiciousResponse(Survey survey, int timeSpentSeconds, AppUser user) {
         // Check if the time spent is below the minimum threshold
         if (timeSpentSeconds < survey.getMinimumTimeSeconds()) {
+            log.warn("survey time {} time spent {}", survey.getMinimumTimeSeconds(), timeSpentSeconds);
             log.warn("Suspicious response: Time spent below minimum threshold for user: {}, survey: {}", 
                     user.getEmail(), survey.getId());
             return true;
@@ -122,7 +123,7 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
             double charsPerSecond = (double) totalChars / response.getTimeSpentSeconds();
             
             // If typing speed is unrealistically fast (more than 10 chars per second on average)
-            if (charsPerSecond > 10) {
+            if (charsPerSecond > 100) {
                 log.warn("Suspicious pattern: Unrealistically fast typing detected ({} chars/sec)", charsPerSecond);
                 return true;
             }

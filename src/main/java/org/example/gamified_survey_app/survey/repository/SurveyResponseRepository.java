@@ -14,14 +14,13 @@ import java.util.List;
 
 @Repository
 public interface SurveyResponseRepository extends JpaRepository<SurveyResponse, Long> {
+    List<SurveyResponse> findByUser(AppUser user);
     List<SurveyResponse> findBySurvey(Survey survey);
-    List<SurveyResponse> findBySurveyId(Long surveyId);
+    SurveyResponse findBySurveyAndUser(Survey survey, AppUser user);
 
-    List<org.example.gamified_survey_app.survey.model.SurveyResponse> findByUser(AppUser user);
 
-    boolean existsBySurveyAndUser(Survey survey, AppUser user);
 
-    @Query("SELECT COUNT(sr) FROM SurveyResponse sr WHERE sr.survey = ?1")
+    @Query("SELECT COUNT(sr) FROM SurveyResponse sr WHERE sr.survey = ?1 AND sr.completedAt IS NOT NULL")
     Long countResponsesBySurvey(Survey survey);
 
     @Query("SELECT COUNT(sr) FROM SurveyResponse sr WHERE sr.survey = :survey AND sr.flaggedAsSuspicious = true")
