@@ -1,13 +1,11 @@
 package org.example.gamified_survey_app.core.security;
 
+import lombok.RequiredArgsConstructor;
 import org.example.gamified_survey_app.auth.model.AppUser;
 import org.example.gamified_survey_app.core.constants.Roles;
 import org.example.gamified_survey_app.survey.model.Survey;
 import org.example.gamified_survey_app.survey.repository.SurveyRepository;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
-import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -18,12 +16,7 @@ public class SurveySecurityService {
     /**
      * Vérifie si l'utilisateur est le créateur du sondage
      */
-    public boolean isCreator(Long surveyId, UserDetails principal) {
-        if (!(principal instanceof AppUser)) {
-            return false;
-        }
-
-        AppUser user = (AppUser) principal;
+    public boolean isCreator(Long surveyId, AppUser user) {
         return surveyRepository.findById(surveyId)
                 .map(survey -> survey.getCreator().getId().equals(user.getId()))
                 .orElse(false);
@@ -32,34 +25,20 @@ public class SurveySecurityService {
     /**
      * Vérifie si l'utilisateur peut voir les résultats d'un sondage
      */
-    public boolean canViewResults(Long surveyId, UserDetails principal) {
-        if (!(principal instanceof AppUser)) {
-            return false;
-        }
-        // Vérifie si l'utilisateur est authentifié
-        System.out.println("verufu2");
-
-        AppUser user = (AppUser) principal;
+    public boolean canViewResults(Long surveyId, AppUser user) {
         Survey survey = surveyRepository.findById(surveyId).orElse(null);
+        if (survey == null) return false;
 
-        if (survey == null) {
-            return false;
-        }
-
-        // Le créateur du sondage ou un admin peut voir les résultats
         boolean isCreator = survey.getCreator().getId().equals(user.getId());
-        System.out.println("isCreator: " + isCreator);
         boolean isAdmin = user.getRole() == Roles.ADMIN;
 
         return isCreator || isAdmin;
-
-
     }
 
     /**
      * Vérifie si l'utilisateur peut modifier un sondage
      */
-    public boolean canEditSurvey(Long surveyId, UserDetails principal) {
-        return isCreator(surveyId, principal);
+    public boolean canEditSurvey(Long surveyId, AppUser user) {
+        return isCreator(surveyId, user);
     }
 }
