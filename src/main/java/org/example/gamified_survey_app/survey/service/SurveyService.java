@@ -113,9 +113,11 @@ public class SurveyService {
             throw new CustomException("can t participate in your own survey");
         }
         SurveyResponse surveyResponse = surveyResponseRepository.findBySurveyAndUser(survey, currentUser);
+        if(surveyResponse != null) {
        if (surveyResponse.getCompletedAt() != null) {
            throw new CustomException("You can't participate many times");
        }
+        }
 
         if (surveyResponseRepository.findBySurveyAndUser(survey, currentUser) == null) {
             SurveyResponse response = new SurveyResponse();
