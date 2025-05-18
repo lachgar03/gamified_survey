@@ -2,6 +2,7 @@ package org.example.gamified_survey_app.gamification.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.gamified_survey_app.auth.model.AppUser;
+import org.example.gamified_survey_app.auth.repository.UserRepository;
 import org.example.gamified_survey_app.gamification.constant.LeaderboardPeriod;
 import org.example.gamified_survey_app.gamification.model.LeaderboardEntry;
 import org.example.gamified_survey_app.gamification.model.Level;
@@ -30,6 +31,7 @@ public class LevelServiceImpl implements LevelService {
 
     private static final Logger log = LoggerFactory.getLogger(LevelServiceImpl.class);
     private final LevelRepository levelRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Cacheable(value = "levels", key = "'all'")
@@ -98,6 +100,8 @@ public class LevelServiceImpl implements LevelService {
                             .orElseThrow(() -> new RuntimeException("No levels defined in the system"));
                 });
     }
+
+
     
     @Override
     public boolean hasUserLeveledUp(AppUser user, Integer oldPoints) {
@@ -108,6 +112,8 @@ public class LevelServiceImpl implements LevelService {
                newLevel.getNumber() > oldLevel.getNumber();
         
         if (leveledUp) {
+            user.setLevel(newLevel);
+            userRepository.save(user);
             log.info("L'utilisateur {} est passé du niveau {} au niveau {}", 
                      user.getEmail(), oldLevel.getNumber(), newLevel.getNumber());
         }
