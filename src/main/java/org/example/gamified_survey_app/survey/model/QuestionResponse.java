@@ -40,5 +40,4 @@ public class QuestionResponse {
     private List<QuestionOption> selectedOptions = new ArrayList<>();
 
     // For rating responses
-    private Integer ratingValue;
 }

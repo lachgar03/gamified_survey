@@ -136,7 +136,6 @@ public class SurveyDtos {
         private Long questionId;
         private String textResponse;
         private List<Long> selectedOptionIds;
-        private Integer ratingValue;
     }
 
     @Data
@@ -159,6 +158,25 @@ public class SurveyDtos {
         private Long totalResponses;
         private Long suspiciousResponses;
         private Double averageTimeSpentSeconds;
+        private List<QuestionAnalytics> questionAnalytics; // <-- ADD THIS
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class QuestionAnalytics {
+        private String text;
+        private String type;
+        private Long responseCount;
+        private List<OptionAnalytics> optionAnalytics; // Only for SINGLE/MULTIPLE CHOICE
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class OptionAnalytics {
+        private String text;
+        private Long count;
     }
 
 

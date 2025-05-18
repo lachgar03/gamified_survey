@@ -35,7 +35,6 @@ public class Question {
     public enum QuestionType {
         SINGLE_CHOICE,
         MULTIPLE_CHOICE,
-        TEXT,
-        RATING
+        TEXT
     }
 }

@@ -59,7 +59,7 @@ public class AuthService {
     @Value("${admin.username:admin@example.com}")
     private String adminUsername;
     
-    @Value("${admin.password:changeThisInProduction!}")
+    @Value("${admin.password:admin123}")
     private String adminPassword;
 
     public AuthResponse register(RegisterRequest request) {
@@ -96,7 +96,10 @@ public class AuthService {
         // Use the injected UserDetailsService to load user details
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtUtils.generateToken(userDetails);
-        leaderboardService.updateUserXp(user,0);
+        //if user is participant add it ot leaderboard els no
+        if (user.getRole() == Roles.PARTICIPANT) {
+            leaderboardService.updateUserXp(user,0);
+            }
         if (request.getReferralCode() != null) {
             List<Referral> referal = referralRepository.findByReferralCode(request.getReferralCode());
             try {
@@ -119,10 +122,10 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         // Special case for admin login
         if (adminUsername.equals(request.getEmail()) && adminPassword.equals(request.getPassword())) {
-            AppUser adminUser = userRepository.findByEmail("admin@yvyr.com")
+            AppUser adminUser = userRepository.findByEmail("admin@example.com")
                     .orElseGet(() -> {
                         AppUser newAdmin = new AppUser();
-                        newAdmin.setEmail("admin@yvyr.com");
+                        newAdmin.setEmail("admin@example.com");
                         newAdmin.setPassword(passwordEncoder.encode("admin123"));
                         newAdmin.setRole(Roles.ADMIN);  // ✅ Set the role directly
                         // set level

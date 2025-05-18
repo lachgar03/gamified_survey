@@ -3,7 +3,9 @@ package org.example.gamified_survey_app.survey.service;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.example.gamified_survey_app.auth.model.AppUser;
@@ -227,9 +229,7 @@ public class SurveyService {
                         }
                         questionResponse.setSelectedOptions(selectedOptions);
                         break;
-                    case RATING:
-                        questionResponse.setRatingValue(questionResponseRequest.getRatingValue());
-                        break;
+
                 }
 
                 questionResponseRepository.save(questionResponse);
@@ -339,6 +339,15 @@ public class SurveyService {
         Page<Survey> surveys = surveyRepository.findAll(pageable);
         return surveys.map(this::mapToSurveyResponse);
     }
+    public Page<SurveyDtos.SurveyResponse> getPendingSurvey(Pageable pageable) {
+        Page<Survey> surveys = surveyRepository.findByVerifiedIsFalse(pageable);
+        return surveys.map(this::mapToSurveyResponse);
+    }
+    public Page<SurveyDtos.SurveyResponse> getVerifiedSurvey(Pageable pageable) {
+        Page<Survey> surveys = surveyRepository.findByVerifiedIsTrue(pageable);
+        return surveys.map(this::mapToSurveyResponse);
+    }
+
 
     @Transactional
     public void deleteSurvey(Long id) {
@@ -482,14 +491,61 @@ public class SurveyService {
         Long flaggedResponses = surveyResponseRepository.countFlaggedResponsesBySurvey(survey);
         Double averageTimeSpent = surveyResponseRepository.averageTimeSpentBySurvey(survey);
 
+        // Pre-fetch all responses for the survey to avoid lazy-loading issues
+        List<QuestionResponse> allResponses = questionResponseRepository.findAllByQuestion_Survey(survey);
+
+        // Group responses by question id for quick access
+        Map<Long, List<QuestionResponse>> responsesByQuestionId = allResponses.stream()
+                .collect(Collectors.groupingBy(r -> r.getQuestion().getId()));
+
+        List<Question> questions = survey.getQuestions();
+
+        List<SurveyDtos.QuestionAnalytics> questionAnalytics = questions.stream().map(question -> {
+            List<QuestionResponse> responses = responsesByQuestionId.getOrDefault(question.getId(), Collections.emptyList());
+
+            long responseCount = responses.size();
+
+         if (question.getType() == Question.QuestionType.SINGLE_CHOICE ||
+                    question.getType() == Question.QuestionType.MULTIPLE_CHOICE) {
+
+                List<QuestionOption> options = question.getOptions() != null ? question.getOptions() : Collections.emptyList();
+
+                List<SurveyDtos.OptionAnalytics> optionStats = options.stream().map(option -> {
+                    long count = responses.stream()
+                            .filter(r -> r.getSelectedOptions() != null && r.getSelectedOptions().contains(option))
+                            .count();
+                    return new SurveyDtos.OptionAnalytics(option.getText(), count);
+                }).collect(Collectors.toList());
+
+                return new SurveyDtos.QuestionAnalytics(
+                        question.getText(),
+                        question.getType().name(),
+                        responseCount,
+                        optionStats
+                );
+            } else {
+                // TEXT or fallback
+                return new SurveyDtos.QuestionAnalytics(
+                        question.getText(),
+                        question.getType().name(),
+                        responseCount,
+                        null
+                );
+            }
+        }).collect(Collectors.toList());
+
         return new SurveyDtos.SurveyResultStats(
                 survey.getId(),
                 survey.getTitle(),
                 totalResponses,
                 flaggedResponses,
-                averageTimeSpent
+                averageTimeSpent,
+                questionAnalytics
         );
     }
+
+
+
     public List<SurveyDtos.SurveyResponseSummary> getUserSurveyAnswerHistory(Long userId) {
         List<SurveyResponse> responses = surveyResponseRepository.findByUserId(userId);
 

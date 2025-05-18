@@ -100,6 +100,19 @@ public class SurveyController {
         SurveyDtos.SurveyResultStats stats = surveyService.getSurveyResults(id);
         return ResponseEntity.ok(stats);
     }
+    @GetMapping("/pending-verification")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<SurveyDtos.SurveyResponse>> getPendingSurvey(@Valid PaginationParams params) {
+            Page<SurveyDtos.SurveyResponse> surveys = surveyService.getPendingSurvey(params.toPageable());
+            return ResponseEntity.ok(surveys);
+    }
+    @GetMapping("/verified")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<SurveyDtos.SurveyResponse>> getVerifiedSurvey(@Valid PaginationParams params) {
+        Page<SurveyDtos.SurveyResponse> surveys = surveyService.getVerifiedSurvey(params.toPageable());
+        return ResponseEntity.ok(surveys);
+    }
+
 
     @PutMapping("/{id}/update")
     @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN') and @surveySecurityService.canEditSurvey(#id, principal)")

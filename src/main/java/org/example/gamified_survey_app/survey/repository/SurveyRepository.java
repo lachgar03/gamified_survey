@@ -16,6 +16,9 @@ import java.util.Optional;
 @Repository
 public interface SurveyRepository extends JpaRepository<Survey, Long> {
   List<Survey> findByDeletedFalseAndCreator(AppUser creator);
+  Page<Survey> findByVerifiedIsFalse(Pageable pageable);
+  Page<Survey> findByVerifiedIsTrue(Pageable pageable);
+
 
   Page<Survey> findByActiveTrue(Pageable pageable);
   List<Survey> findByDeletedFalse();
