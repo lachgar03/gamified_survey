@@ -11,19 +11,22 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SurveyRepository extends JpaRepository<Survey, Long> {
-  List<Survey> findByCreator(AppUser creator);
+  List<Survey> findByDeletedFalseAndCreator(AppUser creator);
 
   Page<Survey> findByActiveTrue(Pageable pageable);
+  List<Survey> findByDeletedFalse();
+  Optional<Survey> findByIdAndDeletedFalse(Long id);
 
   List<Survey> findByCategory(Category category);
 
-  @Query("SELECT s FROM Survey s WHERE s.active = true AND s.expiresAt > ?1 ORDER BY s.createdAt DESC")
+  @Query("SELECT s FROM Survey s WHERE s.active = true AND s.expiresAt > ?1 AND s.deleted = false  ORDER BY s.createdAt DESC")
   Page<Survey> findActiveSurveys(LocalDateTime now, Pageable pageable);
 
-  @Query("SELECT s FROM Survey s WHERE s.active = true AND s.expiresAt > ?1 AND s.id NOT IN " +
+  @Query("SELECT s FROM Survey s WHERE s.active = true AND s.deleted = false AND s.expiresAt > ?1  AND s.id NOT IN " +
           "(SELECT sr.survey.id FROM SurveyResponse sr WHERE sr.user = ?2) " +
           "ORDER BY s.createdAt DESC")
   Page<Survey> findAvailableSurveysForUser(LocalDateTime now, AppUser user, Pageable pageable);

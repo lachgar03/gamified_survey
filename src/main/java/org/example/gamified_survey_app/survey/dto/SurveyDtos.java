@@ -28,6 +28,7 @@ public class SurveyDtos {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class QuestionRequest {
+        private Long id;
         private String text;
         private Integer orderIndex;
         private Question.QuestionType type;
@@ -39,6 +40,7 @@ public class SurveyDtos {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class QuestionOptionRequest {
+        private Long id;
         private String text;
         private Integer orderIndex;
     }

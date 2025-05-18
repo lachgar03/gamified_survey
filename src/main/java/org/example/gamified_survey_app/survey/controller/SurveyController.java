@@ -63,9 +63,9 @@ public class SurveyController {
 
     @GetMapping("/created")
     @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
-    public ResponseEntity<List<SurveyDtos.SurveyResponse>> getSurveysByCreator() {
+    public ResponseEntity<List<SurveyDtos.SurveyDetailResponse>> getSurveysByCreator() {
         log.info("Récupération des sondages créés par l'utilisateur");
-        List<SurveyDtos.SurveyResponse> surveys = surveyService.getSurveysByCreator();
+        List<SurveyDtos.SurveyDetailResponse> surveys = surveyService.getSurveysByCreator();
         return ResponseEntity.ok(surveys);
     }
 
@@ -111,7 +111,7 @@ public class SurveyController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{id}/delete")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN') and @surveySecurityService.canEditSurvey(#id, principal)")
     public ResponseEntity<Void> deleteSurvey(@PathVariable Long id) {
         log.info("Suppression du sondage: {}", id);

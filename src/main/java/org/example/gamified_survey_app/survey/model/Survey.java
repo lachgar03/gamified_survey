@@ -26,6 +26,8 @@ public class Survey {
     private boolean active = true;
     private boolean hasForum = false;
     private boolean verified = false;
+    private boolean deleted = false;
+    private LocalDateTime deletedAt;
 
     @ManyToOne
     @JoinColumn(name = "creator_id")

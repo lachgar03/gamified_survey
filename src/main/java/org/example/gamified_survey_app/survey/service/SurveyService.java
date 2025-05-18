@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+
 @Service
 @RequiredArgsConstructor
 public class SurveyService {
@@ -104,8 +105,10 @@ public class SurveyService {
 
     public SurveyDtos.SurveyDetailResponse getSurveyById(Long id) {
         AppUser currentUser = getCurrentUser();
-        Survey survey = surveyRepository.findById(id)
+        Survey survey = surveyRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new CustomException("Survey not found"));
+
+
         if (!survey.isActive() || survey.getExpiresAt().isBefore(LocalDateTime.now()) ) {
             throw new CustomException("This survey is no longer active");
         }
@@ -130,6 +133,7 @@ public class SurveyService {
     }
 
     public Page<SurveyDtos.SurveyResponse> getActiveSurveys(Pageable pageable) {
+
         Page<Survey> surveys = surveyRepository.findActiveSurveys(LocalDateTime.now(), pageable);
         return surveys.map(this::mapToSurveyResponse);
     }
@@ -140,16 +144,16 @@ public class SurveyService {
         return surveys.map(this::mapToSurveyResponse);
     }
 
-    public List<SurveyDtos.SurveyResponse> getSurveysByCreator() {
+    public List<SurveyDtos.SurveyDetailResponse> getSurveysByCreator() {
         AppUser creator = getCurrentUser();
-        List<Survey> surveys = surveyRepository.findByCreator(creator);
-        return surveys.stream().map(this::mapToSurveyResponse).collect(Collectors.toList());
+        List<Survey> surveys = surveyRepository.findByDeletedFalseAndCreator(creator);
+        return surveys.stream().map(this::mapToSurveyDetailResponse).collect(Collectors.toList());
     }
 
     @Transactional
     public void deactivateSurvey(Long id) {
         AppUser currentUser = getCurrentUser();
-        Survey survey = surveyRepository.findById(id)
+        Survey survey = surveyRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new CustomException("Survey not found"));
 
         if (!survey.getCreator().getId().equals(currentUser.getId())
@@ -339,7 +343,7 @@ public class SurveyService {
     @Transactional
     public void deleteSurvey(Long id) {
         AppUser currentUser = getCurrentUser();
-        Survey survey = surveyRepository.findById(id)
+        Survey survey = surveyRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new CustomException("Survey not found"));
 
         if (!survey.getCreator().getId().equals(currentUser.getId())
@@ -347,13 +351,15 @@ public class SurveyService {
             throw new CustomException("You don't have permission to delete this survey");
         }
 
-        surveyRepository.delete(survey);
+        survey.setDeletedAt(LocalDateTime.now());
+        survey.setDeleted(true);
+        surveyRepository.save(survey);
     }
 
     @Transactional
     public SurveyDtos.SurveyResponse updateSurvey(Long id, SurveyDtos.SurveyRequest updatedSurvey) {
         AppUser currentUser = getCurrentUser();
-        Survey survey = surveyRepository.findById(id)
+        Survey survey = surveyRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new CustomException("Survey not found"));
 
         if (!survey.getCreator().getId().equals(currentUser.getId())
@@ -361,21 +367,115 @@ public class SurveyService {
             throw new CustomException("You don't have permission to update this survey");
         }
 
+        // Update basic survey fields
         survey.setTitle(updatedSurvey.getTitle());
         survey.setDescription(updatedSurvey.getDescription());
         survey.setExpiresAt(updatedSurvey.getExpiresAt());
         survey.setXpReward(updatedSurvey.getXpReward());
         survey.setMinimumTimeSeconds(updatedSurvey.getMinimumTimeSeconds());
-
         Category category = categoryRepository.findById(updatedSurvey.getCategoryId())
                 .orElseThrow(() -> new CustomException("Category not found"));
         survey.setCategory(category);
 
-        return mapToSurveyResponse(surveyRepository.save(survey));
+        // Save survey first to ensure it exists before updating questions
+        survey = surveyRepository.save(survey);
+
+        // Fetch existing questions for this survey
+        List<Question> existingQuestions = questionRepository.findBySurveyOrderByOrderIndexAsc(survey);
+
+        // Map for easy lookup by ID
+        var existingQuestionsMap = existingQuestions.stream()
+                .collect(Collectors.toMap(Question::getId, q -> q));
+
+        // Handle updates/additions of questions
+        for (SurveyDtos.QuestionRequest questionRequest : updatedSurvey.getQuestions()) {
+            Question question;
+
+            if (questionRequest.getId() != null && existingQuestionsMap.containsKey(questionRequest.getId())) {
+                // Update existing question
+                question = existingQuestionsMap.get(questionRequest.getId());
+                question.setText(questionRequest.getText());
+                question.setOrderIndex(questionRequest.getOrderIndex());
+                question.setType(questionRequest.getType());
+                question.setRequired(questionRequest.isRequired());
+            } else {
+                // New question
+                question = new Question();
+                question.setText(questionRequest.getText());
+                question.setOrderIndex(questionRequest.getOrderIndex());
+                question.setType(questionRequest.getType());
+                question.setRequired(questionRequest.isRequired());
+                question.setSurvey(survey);
+            }
+
+            Question savedQuestion = questionRepository.save(question);
+
+            // Handle options for choice questions
+            if ((savedQuestion.getType() == Question.QuestionType.SINGLE_CHOICE
+                    || savedQuestion.getType() == Question.QuestionType.MULTIPLE_CHOICE)
+                    && questionRequest.getOptions() != null) {
+
+                List<QuestionOption> existingOptions = optionRepository.findByQuestionOrderByOrderIndexAsc(savedQuestion);
+                var existingOptionsMap = existingOptions.stream()
+                        .collect(Collectors.toMap(QuestionOption::getId, o -> o));
+
+                for (SurveyDtos.QuestionOptionRequest optionRequest : questionRequest.getOptions()) {
+                    QuestionOption option;
+                    if (optionRequest.getId() != null && existingOptionsMap.containsKey(optionRequest.getId())) {
+                        // Update existing option
+                        option = existingOptionsMap.get(optionRequest.getId());
+                        option.setText(optionRequest.getText());
+                        option.setOrderIndex(optionRequest.getOrderIndex());
+                    } else {
+                        // New option
+                        option = new QuestionOption();
+                        option.setText(optionRequest.getText());
+                        option.setOrderIndex(optionRequest.getOrderIndex());
+                        option.setQuestion(savedQuestion);
+                    }
+                    optionRepository.save(option);
+                }
+
+                // Optionally delete removed options
+                var updatedOptionIds = questionRequest.getOptions().stream()
+                        .filter(o -> o.getId() != null)
+                        .map(SurveyDtos.QuestionOptionRequest::getId)
+                        .collect(Collectors.toSet());
+
+                for (QuestionOption existingOption : existingOptions) {
+                    if (!updatedOptionIds.contains(existingOption.getId())) {
+                        optionRepository.delete(existingOption);
+                    }
+                }
+            } else {
+                // If question type changed to non-choice, delete all existing options
+                List<QuestionOption> existingOptions = optionRepository.findByQuestionOrderByOrderIndexAsc(savedQuestion);
+                if (!existingOptions.isEmpty()) {
+                    optionRepository.deleteAll(existingOptions);
+                }
+            }
+
+            // Remove from existingQuestionsMap to keep track of which questions remain
+            if (questionRequest.getId() != null) {
+                existingQuestionsMap.remove(questionRequest.getId());
+            }
+        }
+
+        // Optionally delete removed questions that are no longer present in update request
+        for (Question questionToDelete : existingQuestionsMap.values()) {
+            // Delete options first to avoid FK constraints
+            List<QuestionOption> optionsToDelete = optionRepository.findByQuestionOrderByOrderIndexAsc(questionToDelete);
+            if (!optionsToDelete.isEmpty()) {
+                optionRepository.deleteAll(optionsToDelete);
+            }
+            questionRepository.delete(questionToDelete);
+        }
+
+        return mapToSurveyResponse(survey);
     }
 
     public SurveyDtos.SurveyResultStats getSurveyResults(Long id) {
-        Survey survey = surveyRepository.findById(id)
+        Survey survey = surveyRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new CustomException("Survey not found"));
 
         Long totalResponses = surveyResponseRepository.countResponsesBySurvey(survey);
