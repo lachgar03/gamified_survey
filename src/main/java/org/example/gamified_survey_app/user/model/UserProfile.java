@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import org.example.gamified_survey_app.auth.model.AppUser;
 
 
+
+
 @Data
 @Entity
 @AllArgsConstructor
@@ -21,7 +23,10 @@ public class UserProfile {
     private String phoneNumber;
     private String profession;
     private String region;
+    @Embedded
+    private AvatarConfig avatarConfig;
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private AppUser user;
+
 }

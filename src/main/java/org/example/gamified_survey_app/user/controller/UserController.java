@@ -3,6 +3,7 @@ package org.example.gamified_survey_app.user.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.gamified_survey_app.user.dto.PasswordChangeDto;
 import org.example.gamified_survey_app.user.dto.UserProfileDto;
+import org.example.gamified_survey_app.user.model.AvatarConfig;
 import org.example.gamified_survey_app.user.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,5 +53,10 @@ public class UserController {
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect old password");
         }
+    }
+    @PutMapping("/avatar")
+    public ResponseEntity<?> updateAvatar(@RequestBody AvatarConfig config) {
+        userService.updateAvatar(config);
+        return ResponseEntity.ok().build();
     }
 }

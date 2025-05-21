@@ -56,7 +56,7 @@ public class AuthService {
     private final LeaderboardService leaderboardService;
 
 
-    @Value("${admin.username:admin@example.com}")
+    @Value("${admin.username:admin@vyyr.com}")
     private String adminUsername;
     
     @Value("${admin.password:admin123}")
@@ -122,10 +122,10 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         // Special case for admin login
         if (adminUsername.equals(request.getEmail()) && adminPassword.equals(request.getPassword())) {
-            AppUser adminUser = userRepository.findByEmail("admin@example.com")
+            AppUser adminUser = userRepository.findByEmail("admin@vyyr.com")
                     .orElseGet(() -> {
                         AppUser newAdmin = new AppUser();
-                        newAdmin.setEmail("admin@example.com");
+                        newAdmin.setEmail("admin@vyyr.com");
                         newAdmin.setPassword(passwordEncoder.encode("admin123"));
                         newAdmin.setRole(Roles.ADMIN);  // ✅ Set the role directly
                         // set level

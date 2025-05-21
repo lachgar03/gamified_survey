@@ -2,6 +2,7 @@ package org.example.gamified_survey_app.user.dto;
 
 
 import lombok.Data;
+import org.example.gamified_survey_app.user.model.AvatarConfig;
 
 @Data
 public class UserProfileDto {
@@ -12,5 +13,7 @@ public class UserProfileDto {
     private Integer age;
     private String phoneNumber;
     private String email;
+    private AvatarConfig avatarConfig;
+
 
 }
