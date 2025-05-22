@@ -5,15 +5,15 @@ import lombok.Data;
 
 @Data
 public class AvatarConfigDto {
-    private String topType;
-    private String accessoriesType;
+    private String top;
+    private String accessories;
     private String hairColor;
-    private String eyeType;
-    private String skinColor;
+    private String eyes;
+    private String skin;
     private String accessoriesColor;
     private String facialHair;
     private String facialHairColor;
-    private String clothes;
+    private String clothing;
     private String clothesColor;
     private String eyebrows;
     private String mouth;

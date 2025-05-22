@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+import static java.sql.DriverManager.println;
+
 @RestController
 @RequestMapping("/api/profileManage")
 @RequiredArgsConstructor
@@ -55,12 +57,12 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect old password");
         }
     }
-//    @PutMapping("/avatar")
-//    public ResponseEntity<AvatarConfigDto> updateAvatar(@RequestBody AvatarConfigDto config) {
-//        return ResponseEntity.ok(userService.updateAvatar(config));
-//    }
-//    @GetMapping("/avatar")
-//    public ResponseEntity<AvatarConfigDto> getAvatar() {
-//        return ResponseEntity.ok(userService.getAvatarConfig());
-//    }
+    @PutMapping("/avatar")
+    public ResponseEntity<AvatarConfigDto> updateAvatar(@RequestBody AvatarConfigDto config) {
+        return ResponseEntity.ok(userService.updateAvatar(config));
+    }
+    @GetMapping("/avatar")
+    public ResponseEntity<AvatarConfigDto> getAvatar() {
+        return ResponseEntity.ok(userService.getAvatarConfig());
+    }
 }

@@ -91,17 +91,17 @@ public class UserService {
             avatarConfig.setUserProfile(profile);
         }
 
-        avatarConfig.setTopType(newConfig.getTopType());
+        avatarConfig.setTop(newConfig.getTop());
         avatarConfig.setHairColor(newConfig.getHairColor());
-        avatarConfig.setAccessoriesType(newConfig.getAccessoriesType());
-        avatarConfig.setEyeType(newConfig.getEyeType());
-        avatarConfig.setSkinColor(newConfig.getSkinColor());
+        avatarConfig.setAccessories(newConfig.getAccessories());
+        avatarConfig.setEyes(newConfig.getEyes());
+        avatarConfig.setSkin(newConfig.getSkin());
         avatarConfig.setAccessoriesColor(newConfig.getAccessoriesColor());
         avatarConfig.setMouth(newConfig.getMouth());
         avatarConfig.setEyebrows(newConfig.getEyebrows());
         avatarConfig.setFacialHair(newConfig.getFacialHair());
         avatarConfig.setFacialHairColor(newConfig.getFacialHairColor());
-        avatarConfig.setClothes(newConfig.getClothes());
+        avatarConfig.setClothing(newConfig.getClothing());
         avatarConfig.setClothesColor(newConfig.getClothesColor());
 
         profile.setAvatarConfig(avatarConfig); // ensures bidirectional link
@@ -124,17 +124,17 @@ public class UserService {
         }
 
         AvatarConfigDto configDto = new AvatarConfigDto();
-        configDto.setTopType(avatarConfig.getTopType());
+        configDto.setTop(avatarConfig.getTop());
         configDto.setHairColor(avatarConfig.getHairColor());
-        configDto.setAccessoriesType(avatarConfig.getAccessoriesType());
-        configDto.setEyeType(avatarConfig.getEyeType());
-        configDto.setSkinColor(avatarConfig.getSkinColor());
+        configDto.setAccessories(avatarConfig.getAccessories());
+        configDto.setEyes(avatarConfig.getEyes());
+        configDto.setSkin(avatarConfig.getSkin());
         configDto.setAccessoriesColor(avatarConfig.getAccessoriesColor());
         configDto.setMouth(avatarConfig.getMouth());
         configDto.setEyebrows(avatarConfig.getEyebrows());
         configDto.setFacialHair(avatarConfig.getFacialHair());
         configDto.setFacialHairColor(avatarConfig.getFacialHairColor());
-        configDto.setClothes(avatarConfig.getClothes());
+        configDto.setClothing(avatarConfig.getClothing());
         configDto.setClothesColor(avatarConfig.getClothesColor());
 
         return configDto;
