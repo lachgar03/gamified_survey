@@ -1,6 +1,7 @@
 package org.example.gamified_survey_app.user.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.gamified_survey_app.user.dto.AvatarConfigDto;
 import org.example.gamified_survey_app.user.dto.PasswordChangeDto;
 import org.example.gamified_survey_app.user.dto.UserProfileDto;
 import org.example.gamified_survey_app.user.model.AvatarConfig;
@@ -54,9 +55,12 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect old password");
         }
     }
-    @PutMapping("/avatar")
-    public ResponseEntity<?> updateAvatar(@RequestBody AvatarConfig config) {
-        userService.updateAvatar(config);
-        return ResponseEntity.ok().build();
-    }
+//    @PutMapping("/avatar")
+//    public ResponseEntity<AvatarConfigDto> updateAvatar(@RequestBody AvatarConfigDto config) {
+//        return ResponseEntity.ok(userService.updateAvatar(config));
+//    }
+//    @GetMapping("/avatar")
+//    public ResponseEntity<AvatarConfigDto> getAvatar() {
+//        return ResponseEntity.ok(userService.getAvatarConfig());
+//    }
 }

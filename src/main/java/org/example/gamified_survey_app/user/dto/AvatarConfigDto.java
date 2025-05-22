@@ -1,21 +1,10 @@
-package org.example.gamified_survey_app.user.model;
+package org.example.gamified_survey_app.user.dto;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
 
 @Data
-@Entity
-@AllArgsConstructor
-@NoArgsConstructor
-
-public class AvatarConfig {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+public class AvatarConfigDto {
     private String topType;
     private String accessoriesType;
     private String hairColor;
@@ -29,6 +18,4 @@ public class AvatarConfig {
     private String eyebrows;
     private String mouth;
 
-    @OneToOne(mappedBy = "avatarConfig")
-    private UserProfile userProfile;
 }

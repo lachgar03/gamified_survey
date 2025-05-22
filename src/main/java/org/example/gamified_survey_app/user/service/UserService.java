@@ -3,6 +3,8 @@ package org.example.gamified_survey_app.user.service;
 import lombok.RequiredArgsConstructor;
 import org.example.gamified_survey_app.auth.model.AppUser;
 import org.example.gamified_survey_app.auth.repository.UserRepository;
+import org.example.gamified_survey_app.core.exception.CustomException;
+import org.example.gamified_survey_app.user.dto.AvatarConfigDto;
 import org.example.gamified_survey_app.user.dto.UserProfileDto;
 import org.example.gamified_survey_app.user.model.AvatarConfig;
 import org.example.gamified_survey_app.user.model.UserProfile;
@@ -76,18 +78,66 @@ public class UserService {
         return true;
     }
 
-    public void updateAvatar(AvatarConfig newConfig) {
-        String  email = SecurityContextHolder.getContext().getAuthentication().getName();
+    public AvatarConfigDto updateAvatar(AvatarConfigDto newConfig) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
         AppUser user = userRepository.findByEmail(email).orElseThrow();
 
         UserProfile profile = userProfileRepository.findByUser(user)
-                .orElseGet(() -> {
-                    UserProfile newProfile = new UserProfile();
-                    newProfile.setUser(user);
-                    return newProfile;
-                });
+                .orElseThrow(() -> new CustomException("User profile not found"));
 
-        profile.setAvatarConfig(newConfig);
-        userProfileRepository.save(profile);
+        AvatarConfig avatarConfig = profile.getAvatarConfig();
+        if (avatarConfig == null) {
+            avatarConfig = new AvatarConfig();
+            avatarConfig.setUserProfile(profile);
+        }
+
+        avatarConfig.setTopType(newConfig.getTopType());
+        avatarConfig.setHairColor(newConfig.getHairColor());
+        avatarConfig.setAccessoriesType(newConfig.getAccessoriesType());
+        avatarConfig.setEyeType(newConfig.getEyeType());
+        avatarConfig.setSkinColor(newConfig.getSkinColor());
+        avatarConfig.setAccessoriesColor(newConfig.getAccessoriesColor());
+        avatarConfig.setMouth(newConfig.getMouth());
+        avatarConfig.setEyebrows(newConfig.getEyebrows());
+        avatarConfig.setFacialHair(newConfig.getFacialHair());
+        avatarConfig.setFacialHairColor(newConfig.getFacialHairColor());
+        avatarConfig.setClothes(newConfig.getClothes());
+        avatarConfig.setClothesColor(newConfig.getClothesColor());
+
+        profile.setAvatarConfig(avatarConfig); // ensures bidirectional link
+        userProfileRepository.save(profile);   // saves avatar too via cascade
+
+        return newConfig;
     }
+
+
+    public AvatarConfigDto getAvatarConfig() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        AppUser user = userRepository.findByEmail(email).orElseThrow();
+
+        UserProfile profile = userProfileRepository.findByUser(user)
+                .orElseThrow(() -> new CustomException("User profile not found"));
+
+        AvatarConfig avatarConfig = profile.getAvatarConfig();
+        if (avatarConfig == null) {
+            return new AvatarConfigDto(); // return empty config
+        }
+
+        AvatarConfigDto configDto = new AvatarConfigDto();
+        configDto.setTopType(avatarConfig.getTopType());
+        configDto.setHairColor(avatarConfig.getHairColor());
+        configDto.setAccessoriesType(avatarConfig.getAccessoriesType());
+        configDto.setEyeType(avatarConfig.getEyeType());
+        configDto.setSkinColor(avatarConfig.getSkinColor());
+        configDto.setAccessoriesColor(avatarConfig.getAccessoriesColor());
+        configDto.setMouth(avatarConfig.getMouth());
+        configDto.setEyebrows(avatarConfig.getEyebrows());
+        configDto.setFacialHair(avatarConfig.getFacialHair());
+        configDto.setFacialHairColor(avatarConfig.getFacialHairColor());
+        configDto.setClothes(avatarConfig.getClothes());
+        configDto.setClothesColor(avatarConfig.getClothesColor());
+
+        return configDto;
+    }
+
 }

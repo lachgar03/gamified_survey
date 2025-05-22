@@ -20,8 +20,10 @@ import org.example.gamified_survey_app.core.service.EmailService;
 import org.example.gamified_survey_app.core.util.JwtUtils;
 import org.example.gamified_survey_app.gamification.repository.LevelRepository;
 import org.example.gamified_survey_app.gamification.service.LeaderboardService;
+import org.example.gamified_survey_app.user.model.AvatarConfig;
 import org.example.gamified_survey_app.user.model.Referral;
 import org.example.gamified_survey_app.user.model.UserProfile;
+import org.example.gamified_survey_app.user.repository.AvatarConfigRepository;
 import org.example.gamified_survey_app.user.repository.ReferralRepository;
 import org.example.gamified_survey_app.user.repository.UserProfileRepository;
 import org.example.gamified_survey_app.user.service.ReferralService;
@@ -54,12 +56,13 @@ public class AuthService {
     private final ReferralRepository referralRepository;
     private final ReferralService referralService;
     private final LeaderboardService leaderboardService;
+    private final AvatarConfigRepository avatarConfigRepository;
 
 
-    @Value("${admin.username:admin@vyyr.com}")
+    @Value("${admin.username}")
     private String adminUsername;
-    
-    @Value("${admin.password:admin123}")
+
+    @Value("${admin.password}")
     private String adminPassword;
 
     public AuthResponse register(RegisterRequest request) {
@@ -68,12 +71,18 @@ public class AuthService {
         }
         AppUser user = new AppUser();
         UserProfile userProfile = new UserProfile();
+        AvatarConfig config = new AvatarConfig();
+        config.setMouth("default");
+        avatarConfigRepository.saveAndFlush(config);
+
         userProfile.setLastName(request.getLastname());
         userProfile.setFirstName(request.getFirstname());
         userProfile.setProfession(null);
         userProfile.setAge(0);
         userProfile.setPhoneNumber(null);
         userProfile.setRegion(null);
+        userProfile.setAvatarConfig(config);
+
         user.setEmail(request.getEmail());
 
 
@@ -89,10 +98,10 @@ public class AuthService {
         user.setXp(0);
         user.setLevel(levelRepository.findByNumber(1).orElseThrow(() -> new CustomException("Level not found")));
 
-        userRepository.save(user);
+        userRepository.saveAndFlush(user);
         userProfile.setUser(user);
-        userProfileRepository.save(userProfile);
-
+        userProfileRepository.saveAndFlush(userProfile);
+        System.out.println("User profile created for user: "+ user.getEmail());
         // Use the injected UserDetailsService to load user details
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtUtils.generateToken(userDetails);

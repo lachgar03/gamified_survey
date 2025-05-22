@@ -23,10 +23,11 @@ public class UserProfile {
     private String phoneNumber;
     private String profession;
     private String region;
-    @Embedded
-    private AvatarConfig avatarConfig;
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private AppUser user;
+    @OneToOne(optional = true)
+    @JoinColumn(name = "avatar_config_id", referencedColumnName = "id")
+    private AvatarConfig avatarConfig;
 
 }
