@@ -79,6 +79,7 @@ public class SecurityConfig {
                         // Profile management
                         .requestMatchers("/api/profileManage/**").authenticated()
                         .requestMatchers("/api/users/progression").authenticated()
+                        .requestMatchers("/api/creator/stats").authenticated()
 
                         // Default - require authentication for all other endpoints
                         .anyRequest().authenticated()

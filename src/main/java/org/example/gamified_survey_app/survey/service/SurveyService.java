@@ -23,6 +23,8 @@ import org.example.gamified_survey_app.survey.model.QuestionResponse;
 import org.example.gamified_survey_app.survey.model.Survey;
 import org.example.gamified_survey_app.survey.model.SurveyResponse;
 import org.example.gamified_survey_app.survey.repository.*;
+import org.example.gamified_survey_app.user.dto.CreatorStatsDTO;
+import org.example.gamified_survey_app.user.dto.SurveySummaryDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -560,5 +562,59 @@ public class SurveyService {
                 ))
                 .collect(Collectors.toList());
     }
+
+    public CreatorStatsDTO getCreatorStats() {
+        AppUser creator = getCurrentUser();
+        List<Survey> surveys = surveyRepository.findByDeletedFalseAndCreator(creator);
+        int totalSurveys = surveys.size();
+
+        int totalResponses = 0;
+        int totalXp = 0;
+        int totalSuspicious = 0;
+        int totalTime = 0;
+
+        List<SurveySummaryDTO> summaries = new ArrayList<>();
+
+        for (Survey survey : surveys) {
+            List<SurveyResponse> responses = surveyResponseRepository.findBySurvey(survey);
+            int responseCount = responses.size();
+            totalResponses += responseCount;
+
+            int surveyXp = 0;
+            int surveySuspicious = 0;
+            int surveyTime = 0;
+
+            for (SurveyResponse response : responses) {
+                surveyXp += response.getXpAwarded() != null ? response.getXpAwarded() : 0;
+                surveySuspicious += response.isFlaggedAsSuspicious() ? 1 : 0;
+                surveyTime += response.getTimeSpentSeconds() != null ? response.getTimeSpentSeconds() : 0;
+            }
+
+            totalXp += surveyXp;
+            totalSuspicious += surveySuspicious;
+            totalTime += surveyTime;
+
+            SurveySummaryDTO dto = new SurveySummaryDTO();
+            dto.setSurveyId(survey.getId());
+            dto.setTitle(survey.getTitle());
+            dto.setResponseCount(responseCount);
+            dto.setTotalXpAwarded(surveyXp);
+            dto.setSuspiciousResponses(surveySuspicious);
+            dto.setAverageTimeSpentSeconds(responseCount > 0 ? (double) surveyTime / responseCount : 0);
+            summaries.add(dto);
+        }
+
+        CreatorStatsDTO stats = new CreatorStatsDTO();
+        stats.setTotalSurveysCreated(totalSurveys);
+        stats.setTotalResponses(totalResponses);
+        stats.setAverageResponsesPerSurvey(totalSurveys > 0 ? (double) totalResponses / totalSurveys : 0);
+        stats.setTotalXpAwarded(totalXp);
+        stats.setSuspiciousResponsesCount(totalSuspicious);
+        stats.setAverageTimeSpentSeconds(totalResponses > 0 ? (double) totalTime / totalResponses : 0);
+        stats.setSurveySummaries(summaries);
+
+        return stats;
+    }
+
 
 }
