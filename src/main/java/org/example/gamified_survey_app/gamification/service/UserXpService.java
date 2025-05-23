@@ -41,6 +41,7 @@ public class UserXpService {
         userRepository.save(user);
 
         // Update leaderboard
+        System.out.println(xpToAdd);
         leaderboardService.updateUserXp(user, xpToAdd);
 
         System.out.println("Awarded "+xpToAdd +"XP to user "+user.getEmail());

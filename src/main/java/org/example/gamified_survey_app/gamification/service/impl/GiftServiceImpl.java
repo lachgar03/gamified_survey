@@ -106,7 +106,7 @@ public class GiftServiceImpl implements GiftService {
         giftRepository.save(gift);
         
         // Update user points
-        userXpService.updateUserXp(user , user.getXp() - gift.getPointsCost());
+        userXpService.updateUserXp(user , -(gift.getPointsCost()));
         // Save redemption
         return redemptionRepository.save(redemption);
     }
