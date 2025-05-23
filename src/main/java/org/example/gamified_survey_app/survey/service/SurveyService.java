@@ -70,6 +70,9 @@ public class SurveyService {
         survey.setExpiresAt(request.getExpiresAt());
         survey.setCreator(creator);
         survey.setCategory(category);
+        if (request.getXpReward()>10){
+            throw new CustomException("Xp reward must be less than 10");
+        }
         survey.setXpReward(request.getXpReward());
         survey.setMinimumTimeSeconds(request.getMinimumTimeSeconds());
         survey.setActive(true);
