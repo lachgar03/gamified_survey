@@ -24,7 +24,7 @@ public class Survey {
     private LocalDateTime createdAt;
     private LocalDateTime expiresAt;
     private boolean active = true;
-    private boolean hasForum = false;
+    private boolean hasForum;
     private boolean verified = false;
     private boolean deleted = false;
     private LocalDateTime deletedAt;

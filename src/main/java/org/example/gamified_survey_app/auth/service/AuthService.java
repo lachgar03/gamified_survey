@@ -78,9 +78,9 @@ public class AuthService {
         userProfile.setLastName(request.getLastname());
         userProfile.setFirstName(request.getFirstname());
         userProfile.setProfession(null);
-        userProfile.setAge(0);
+        userProfile.setAge(request.getAge());
         userProfile.setPhoneNumber(null);
-        userProfile.setRegion(null);
+        userProfile.setRegion(request.getRegion());
         userProfile.setAvatarConfig(config);
 
         user.setEmail(request.getEmail());

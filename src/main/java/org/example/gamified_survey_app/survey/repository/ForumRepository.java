@@ -10,4 +10,5 @@ import java.util.Optional;
 @Repository
 public interface ForumRepository extends JpaRepository<Forum, Long> {
     Optional<Forum> findBySurvey(Survey survey);
+    boolean existsBySurvey(Survey survey);
 }

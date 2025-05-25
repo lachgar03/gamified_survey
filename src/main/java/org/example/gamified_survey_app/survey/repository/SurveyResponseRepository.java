@@ -1,6 +1,7 @@
 package org.example.gamified_survey_app.survey.repository;
 
 import org.example.gamified_survey_app.auth.model.AppUser;
+import org.example.gamified_survey_app.survey.dto.DetailedSurveyResults;
 import org.example.gamified_survey_app.survey.model.Survey;
 import org.example.gamified_survey_app.survey.model.SurveyResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -35,6 +36,18 @@ public interface SurveyResponseRepository extends JpaRepository<SurveyResponse, 
 
     @Query("SELECT COUNT(sr) FROM SurveyResponse sr WHERE sr.user = :user AND FUNCTION('DATE', sr.completedAt) = :date")
     int countByUserAndDate(@Param("user") AppUser user, @Param("date") LocalDate date);
+    @Query("SELECT new org.example.gamified_survey_app.survey.dto.DetailedSurveyResults$ResponseByDay(" +
+            "CAST(sr.completedAt AS LocalDate), COUNT(sr)) " +
+            "FROM SurveyResponse sr " +
+            "WHERE sr.survey.id = :surveyId " +
+            "GROUP BY CAST(sr.completedAt AS LocalDate) " +
+            "ORDER BY CAST(sr.completedAt AS LocalDate)")
+    List<DetailedSurveyResults.ResponseByDay> countResponsesByDay(@Param("surveyId") Long surveyId);
 
+
+    @Query("SELECT DISTINCT sr.user FROM SurveyResponse sr WHERE sr.survey.id = :surveyId")
+    List<AppUser> findDistinctUsersBySurveyId(@Param("surveyId") Long surveyId);
+
+    Long countBySurveyId(Long surveyId);
 
 }

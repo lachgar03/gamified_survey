@@ -21,6 +21,7 @@ public class Forum {
     private String title;
     private String description;
     private LocalDateTime createdAt;
+    private boolean enabled;
 
     @OneToOne
     @JoinColumn(name = "survey_id")

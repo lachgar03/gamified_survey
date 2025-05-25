@@ -7,6 +7,8 @@ import org.example.gamified_survey_app.core.exception.CustomException;
 import org.example.gamified_survey_app.survey.dto.SurveyDtos;
 import org.example.gamified_survey_app.survey.model.*;
 import org.example.gamified_survey_app.survey.repository.*;
+import org.example.gamified_survey_app.user.model.UserProfile;
+import org.example.gamified_survey_app.user.repository.UserProfileRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +30,7 @@ public class ForumService {
     private final CommentRepository commentRepository;
     private final SurveyRepository surveyRepository;
     private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
 
     // Helper method to get current user
     private AppUser getCurrentUser() {
@@ -130,6 +134,28 @@ public class ForumService {
         return comments.map(this::mapToCommentResponse);
     }
 
+    @Transactional
+    public void createForumForSurvey(Survey survey) {
+        if (forumRepository.existsBySurvey(survey)) {
+            throw new CustomException("Forum already exists for this survey");
+        }
+
+        Forum forum = new Forum();
+        forum.setTitle(survey.getTitle() + " Discussion");
+        forum.setEnabled(true);
+        forum.setDescription("Forum for discussing the survey: " + survey.getTitle());
+        forum.setCreatedAt(LocalDateTime.now());
+        forum.setSurvey(survey);
+
+        forumRepository.save(forum);
+    }
+    @Transactional
+    public void removeForumFromSurvey(Survey survey) {
+        forumRepository.findBySurvey(survey).ifPresent(forum -> {
+            forum.setEnabled(false);
+        });
+    }
+
     // Mapping methods
     private SurveyDtos.ForumResponse mapToForumResponse(Forum forum) {
         int subjectCount = forum.getSubjects() != null ? forum.getSubjects().size() : 0;
@@ -147,23 +173,27 @@ public class ForumService {
 
     private SurveyDtos.SubjectResponse mapToSubjectResponse(Subject subject) {
         int commentCount = subject.getComments() != null ? subject.getComments().size() : 0;
+        Optional<UserProfile> profile = userProfileRepository.findByUser(subject.getCreator());
+        String name = profile.get().getLastName() + " " + profile.get().getFirstName();
 
         return new SurveyDtos.SubjectResponse(
                 subject.getId(),
                 subject.getTitle(),
                 subject.getPostedAt(),
-                subject.getCreator().getEmail(),
+                name,
                 subject.getForum().getId(),
                 commentCount
         );
     }
 
     private SurveyDtos.CommentResponse mapToCommentResponse(Comment comment) {
+        Optional<UserProfile> profile = userProfileRepository.findByUser(comment.getCreator());
+        String name = profile.get().getLastName() + " " + profile.get().getFirstName();
         return new SurveyDtos.CommentResponse(
                 comment.getId(),
                 comment.getContent(),
                 comment.getSentDate(),
-                comment.getCreator().getEmail(),
+                name,
                 comment.getSubject().getId()
         );
     }

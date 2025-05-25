@@ -17,8 +17,9 @@ public class SurveyDtos {
     public static class SurveyRequest {
         private String title;
         private String description;
-        private LocalDateTime expiresAt;
         private Long categoryId;
+        private LocalDateTime expiresAt;
+        private boolean hasForum;
         private Integer xpReward;
         private Integer minimumTimeSeconds;
         private List<QuestionRequest> questions;
@@ -56,6 +57,7 @@ public class SurveyDtos {
         private String description;
         private LocalDateTime createdAt;
         private LocalDateTime expiresAt;
+        private boolean hasForum;
         private boolean active;
         private boolean verified;
         private String creatorEmail;
@@ -73,6 +75,7 @@ public class SurveyDtos {
         private String description;
         private LocalDateTime createdAt;
         private LocalDateTime expiresAt;
+        private boolean hasForum;
         private boolean active;
         private boolean verified;
         private String creatorEmail;
@@ -219,7 +222,7 @@ public class SurveyDtos {
         private Long id;
         private String title;
         private LocalDateTime postedAt;
-        private String creatorEmail;
+        private String creator;
         private Long forumId;
         private int commentCount;
     }
@@ -239,7 +242,7 @@ public class SurveyDtos {
         private Long id;
         private String content;
         private LocalDateTime sentDate;
-        private String creatorEmail;
+        private String creator;
         private Long subjectId;
     }
 

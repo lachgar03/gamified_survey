@@ -3,7 +3,9 @@ package org.example.gamified_survey_app.survey.controller;
 import java.util.List;
 
 import org.example.gamified_survey_app.core.dto.PaginationParams;
+import org.example.gamified_survey_app.survey.dto.DetailedSurveyResults;
 import org.example.gamified_survey_app.survey.dto.SurveyDtos;
+import org.example.gamified_survey_app.survey.service.SurveyAnalyticsService;
 import org.example.gamified_survey_app.survey.service.SurveyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,6 +33,8 @@ public class SurveyController {
 
     private static final Logger log = LoggerFactory.getLogger(SurveyController.class);
     private final SurveyService surveyService;
+    private final SurveyAnalyticsService surveyAnalyticsService;
+
 
     @PostMapping
     @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
@@ -137,6 +142,13 @@ public class SurveyController {
             @AuthenticationPrincipal(expression = "id") Long userId) {
         List<SurveyDtos.SurveyResponseSummary> history = surveyService.getUserSurveyAnswerHistory(userId);
         return ResponseEntity.ok(history);
+    }
+
+    @GetMapping("/{surveyId}/results/detailed")
+    public DetailedSurveyResults getDetailedSurveyResults(
+            @PathVariable Long surveyId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return surveyAnalyticsService.getDetailedSurveyResults(surveyId, userDetails.getUsername());
     }
 
 }

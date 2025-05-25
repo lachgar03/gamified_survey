@@ -49,6 +49,7 @@ public class SurveyService {
     private final LeaderboardService leaderboardService;
     private final FraudDetectionService fraudDetectionService;
     private final UserXpService userXpService;
+    private final ForumService forumService;
 
     @Transactional
     public SurveyDtos.SurveyResponse createSurvey(SurveyDtos.SurveyRequest request) {
@@ -68,6 +69,7 @@ public class SurveyService {
         survey.setDescription(request.getDescription());
         survey.setCreatedAt(LocalDateTime.now());
         survey.setExpiresAt(request.getExpiresAt());
+        survey.setHasForum(request.isHasForum());
         survey.setCreator(creator);
         survey.setCategory(category);
         if (request.getXpReward()>10 || request.getXpReward() < 0) {
@@ -79,6 +81,9 @@ public class SurveyService {
         survey.setVerified(false);
 
         Survey savedSurvey = surveyRepository.save(survey);
+        if (request.isHasForum()) {
+            forumService.createForumForSurvey(savedSurvey);
+        }
 
         if (request.getQuestions() != null) {
             for (SurveyDtos.QuestionRequest questionRequest : request.getQuestions()) {
@@ -288,6 +293,7 @@ public class SurveyService {
                 survey.getDescription(),
                 survey.getCreatedAt(),
                 survey.getExpiresAt(),
+                survey.isHasForum(),
                 survey.isActive(),
                 survey.isVerified(),
                 survey.getCreator().getEmail(),
@@ -329,6 +335,7 @@ public class SurveyService {
                 survey.getDescription(),
                 survey.getCreatedAt(),
                 survey.getExpiresAt(),
+                survey.isHasForum(),
                 survey.isActive(),
                 survey.isVerified(),
                 survey.getCreator().getEmail(),
@@ -386,6 +393,7 @@ public class SurveyService {
         survey.setDescription(updatedSurvey.getDescription());
         survey.setExpiresAt(updatedSurvey.getExpiresAt());
         survey.setXpReward(updatedSurvey.getXpReward());
+        survey.setHasForum(updatedSurvey.isHasForum());
         survey.setMinimumTimeSeconds(updatedSurvey.getMinimumTimeSeconds());
         Category category = categoryRepository.findById(updatedSurvey.getCategoryId())
                 .orElseThrow(() -> new CustomException("Category not found"));
@@ -393,6 +401,12 @@ public class SurveyService {
 
         // Save survey first to ensure it exists before updating questions
         survey = surveyRepository.save(survey);
+        if(updatedSurvey.isHasForum())
+        {
+            forumService.createForumForSurvey(survey);
+        }else {
+            forumService.removeForumFromSurvey(survey);
+        }
 
         // Fetch existing questions for this survey
         List<Question> existingQuestions = questionRepository.findBySurveyOrderByOrderIndexAsc(survey);

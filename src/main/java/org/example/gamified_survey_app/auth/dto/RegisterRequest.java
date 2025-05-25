@@ -10,6 +10,8 @@
         private String lastname;
         private String role;
         private String referralCode;
+        private Integer age;
+        private String region;
 
     }
 
