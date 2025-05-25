@@ -3,6 +3,7 @@ package org.example.gamified_survey_app.survey.service;
 import lombok.RequiredArgsConstructor;
 import org.example.gamified_survey_app.auth.model.AppUser;
 import org.example.gamified_survey_app.auth.repository.UserRepository;
+import org.example.gamified_survey_app.core.constants.Roles;
 import org.example.gamified_survey_app.core.exception.CustomException;
 import org.example.gamified_survey_app.survey.dto.SurveyDtos;
 import org.example.gamified_survey_app.survey.model.*;
@@ -108,6 +109,61 @@ public class ForumService {
     }
 
     @Transactional
+    public void deleteSubject(SurveyDtos.DeleteSubjectRequest request) {
+        AppUser currentUser = getCurrentUser();
+
+        Forum forum = forumRepository.findById(request.getForumId())
+                .orElseThrow(() -> new CustomException("Forum not found"));
+
+        Subject subject = subjectRepository.findById(request.getSubjectId())
+                .orElseThrow(() -> new CustomException("Subject not found"));
+
+        if (!subject.getForum().getId().equals(forum.getId())) {
+            throw new CustomException("Subject does not belong to the specified forum");
+        }
+
+        if (!subject.getCreator().getId().equals(currentUser.getId()) &&
+                !currentUser.getRole().equals(Roles.ADMIN)) {
+            throw new CustomException("You are not authorized to delete this subject");
+        }
+
+        if (subject.getComments() != null && !subject.getComments().isEmpty()) {
+            commentRepository.deleteAll(subject.getComments());
+        }
+
+        subjectRepository.delete(subject);
+    }
+
+
+
+    @Transactional
+    public void deleteComment(SurveyDtos.DeleteCommentRequest request) {
+        AppUser currentUser = getCurrentUser();
+
+        Forum forum = forumRepository.findById(request.getForumId())
+                .orElseThrow(() -> new CustomException("Forum not found"));
+
+        Subject subject = subjectRepository.findById(request.getSubjectId())
+                .orElseThrow(() -> new CustomException("Subject not found"));
+
+        Comment comment = commentRepository.findById(request.getCommentId())
+                .orElseThrow(() -> new CustomException("Comment not found"));
+
+        if (!comment.getSubject().getId().equals(subject.getId()) ||
+                !subject.getForum().getId().equals(forum.getId())) {
+            throw new CustomException("Comment does not belong to the specified subject/forum");
+        }
+
+        if (!comment.getCreator().getId().equals(currentUser.getId()) &&
+                !currentUser.getRole().equals(Roles.ADMIN)) {
+            throw new CustomException("You are not authorized to delete this comment");
+        }
+
+        commentRepository.delete(comment);
+    }
+
+
+    @Transactional
     public SurveyDtos.CommentResponse createComment(SurveyDtos.CommentRequest request) {
         AppUser currentUser = getCurrentUser();
 
@@ -181,6 +237,7 @@ public class ForumService {
                 subject.getTitle(),
                 subject.getPostedAt(),
                 name,
+                subject.getCreator().getId(),
                 subject.getForum().getId(),
                 commentCount
         );
@@ -194,6 +251,7 @@ public class ForumService {
                 comment.getContent(),
                 comment.getSentDate(),
                 name,
+                comment.getCreator().getId(),
                 comment.getSubject().getId()
         );
     }

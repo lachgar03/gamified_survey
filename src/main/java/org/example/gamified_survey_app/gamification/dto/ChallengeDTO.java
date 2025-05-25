@@ -11,11 +11,11 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class BadgeDTO {
+public class ChallengeDTO {
     private Long id;
     private String name;
     private String description;
-    private String imageUrl;
+    private Integer XpValue;
     private String achievementCondition;
 
     private Integer targetValue;

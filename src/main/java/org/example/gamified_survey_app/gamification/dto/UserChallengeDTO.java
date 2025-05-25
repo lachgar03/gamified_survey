@@ -9,18 +9,15 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserBadgeDTO {
+public class UserChallengeDTO {
     private Long id;
     private Long userId;
     private String userName;
-    private BadgeDTO badge;
-
+    private ChallengeDTO badge;
     private Integer currentValue;
     private boolean completed;
     private LocalDateTime completedAt;
-
     private boolean rewardClaimed;
     private LocalDateTime rewardClaimedAt;
-
     private LocalDateTime startedAt;
 }

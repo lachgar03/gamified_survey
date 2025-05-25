@@ -223,6 +223,7 @@ public class SurveyDtos {
         private String title;
         private LocalDateTime postedAt;
         private String creator;
+        private Long creatorId;
         private Long forumId;
         private int commentCount;
     }
@@ -243,8 +244,27 @@ public class SurveyDtos {
         private String content;
         private LocalDateTime sentDate;
         private String creator;
+        private Long creatorId;
+        private Long subjectId;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DeleteCommentRequest {
+        private Long forumId;
+        private Long subjectId;
+        private Long commentId;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DeleteSubjectRequest {
+        private Long forumId;
         private Long subjectId;
     }
 
 
-}
+
+    }

@@ -1,9 +1,9 @@
 package org.example.gamified_survey_app.gamification.seeder;
 
-import org.example.gamified_survey_app.gamification.model.Badge;
+import org.example.gamified_survey_app.gamification.model.Challenge;
 import org.example.gamified_survey_app.gamification.model.Gift;
 import org.example.gamified_survey_app.gamification.model.Level;
-import org.example.gamified_survey_app.gamification.repository.BadgeRepository;
+import org.example.gamified_survey_app.gamification.repository.ChallengeRepository;
 import org.example.gamified_survey_app.gamification.repository.GiftRepository;
 import org.example.gamified_survey_app.gamification.repository.LevelRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -19,7 +19,7 @@ public class GamificationDataSeeder {
 
     @Bean
     CommandLineRunner seedData(
-            BadgeRepository badgeRepository,
+            ChallengeRepository challengeRepository,
             LevelRepository levelRepository,
             GiftRepository giftRepository) {
         return args -> {
@@ -39,103 +39,103 @@ public class GamificationDataSeeder {
             }
 
             // Seeder pour les badges
-            if (badgeRepository.count() == 0) {
-                badgeRepository.saveAll(List.of(
-                        new Badge(
+            if (challengeRepository.count() == 0) {
+                challengeRepository.saveAll(List.of(
+                        new Challenge(
                                 null,
                                 "Engagé",
                                 "Laisser 3 commentaires sur des sondages",
-                                null,
+                                3,
                                 3,
                                 ChallengeType.CREATE_COMMENTS,
                                 "Laisser 3 commentaires sur des sondages",
                                 ChallengePeriod.PERMANENT
                         ),
-                        new Badge(
+                        new Challenge(
                                 null,
                                 "Explorer",
                                 "Répondre à au moins 1 sondage par catégorie",
-                                null,
+                                1,
                                 1,
                                 ChallengeType.COMPLETE_CATEGORY_SURVEYS,
                                 "Répondre à 1 sondage par catégorie",
                                 ChallengePeriod.PERMANENT
                         ),
-                        new Badge(
+                        new Challenge(
                                 null,
                                 "Nouveau Répondant",
                                 "Un filleul a répondu à 5 sondages",
-                                null,
+                                5,
                                 5,
                                 ChallengeType.REFER_USERS,
                                 "Un filleul a répondu à 5 sondages",
                                 ChallengePeriod.PERMANENT
                         ),
-                        new Badge(
+                        new Challenge(
                                 null,
                                 "Super Parrain",
                                 "Un filleul a atteint le niveau 3",
-                                null,
+                                3,
                                 3,
                                 ChallengeType.REFER_USERS,
                                 "Un filleul atteint le niveau 3",
                                 ChallengePeriod.PERMANENT
                         ),
-                        new Badge(
+                        new Challenge(
                                 null,
                                 "Matinal",
                                 "Se connecter 7 jours consécutifs",
-                                null,
+                                7,
                                 7,
                                 ChallengeType.DAILY_LOGIN,
                                 "Connexion quotidienne pendant 7 jours",
                                 ChallengePeriod.DAILY
                         ),
-                        new Badge(
+                        new Challenge(
                                 null,
                                 "Surfeur Régulier",
                                 "Participer à des sondages chaque semaine pendant 4 semaines",
-                                null,
+                                4,
                                 4,
                                 ChallengeType.WEEKLY_PARTICIPATION,
                                 "Participation hebdomadaire pendant 4 semaines",
                                 ChallengePeriod.WEEKLY
                         ),
-                        new Badge(
+                        new Challenge(
                                 null,
                                 "Réactif",
                                 "Compléter 5 sondages en moins de 24 heures",
-                                null,
+                                5,
                                 5,
                                 ChallengeType.QUICK_RESPONSE,
                                 "Répondre rapidement à 5 sondages",
                                 ChallengePeriod.DAILY
                         ),
-                        new Badge(
+                        new Challenge(
                                 null,
                                 "Populaire",
                                 "Obtenir 10 likes sur vos commentaires",
-                                null,
+                                10,
                                 10,
                                 ChallengeType.GET_COMMENT_LIKES,
                                 "Obtenir 10 likes sur vos commentaires",
                                 ChallengePeriod.PERMANENT
                         ),
-                        new Badge(
+                        new Challenge(
                                 null,
                                 "Influenceur",
                                 "Parrainer 3 nouveaux utilisateurs",
-                                null,
+                                3,
                                 3,
                                 ChallengeType.REFER_USERS,
                                 "Parrainer 3 utilisateurs",
                                 ChallengePeriod.PERMANENT
                         ),
-                        new Badge(
+                        new Challenge(
                                 null,
                                 "Fidèle",
                                 "Participer à 10 sondages",
-                                null,
+                                10,
                                 10,
                                 ChallengeType.COMPLETE_SURVEYS,
                                 "Participer à 10 sondages",

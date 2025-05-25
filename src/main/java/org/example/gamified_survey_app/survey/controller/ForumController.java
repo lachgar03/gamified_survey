@@ -52,4 +52,19 @@ public class ForumController {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by("sentDate").ascending());
         return ResponseEntity.ok(forumService.getCommentsBySubject(subjectId, pageRequest));
     }
+
+    @PostMapping("/subject/delete")
+    public ResponseEntity<?> deleteSubject(@RequestBody SurveyDtos.DeleteSubjectRequest request) {
+        forumService.deleteSubject(request);
+        return ResponseEntity.ok("Subject deleted successfully");
+    }
+
+    @PostMapping("/comment/delete")
+    public ResponseEntity<?> deleteComment(@RequestBody SurveyDtos.DeleteCommentRequest request) {
+        forumService.deleteComment(request);
+        return ResponseEntity.ok("Comment deleted successfully");
+    }
+
+
+
 }

@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserBadge {
+public class UserChallenge {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +24,7 @@ public class UserBadge {
 
     @ManyToOne
     @JoinColumn(name = "badge_id")
-    private Badge badge;
+    private Challenge challenge;
 
     // Track progress toward badge (optional)
     private Integer currentValue = 0;

@@ -11,7 +11,7 @@ import org.example.gamified_survey_app.gamification.constant.ChallengeType;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Badge {
+public class Challenge {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,11 +19,9 @@ public class Badge {
 
     private String name;
     private String description;
-    private String imageUrl;
-
     // Example: 5 for "Complete 5 surveys"
     private Integer targetValue;
-
+    private Integer xpValue;
     // Type of action, e.g., "surveys_completed", "logins", "referrals"
     @Enumerated(EnumType.STRING)
     private ChallengeType actionType;
