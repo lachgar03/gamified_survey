@@ -3,6 +3,7 @@
     import lombok.RequiredArgsConstructor;
     import org.example.gamified_survey_app.admin.dto.BannedUserDTO;
     import org.example.gamified_survey_app.admin.dto.UserBanRequest;
+    import org.example.gamified_survey_app.admin.dto.UserProfileadmiDTO;
     import org.example.gamified_survey_app.admin.service.AdminService;
     import org.example.gamified_survey_app.auth.model.AppUser;
     import org.example.gamified_survey_app.core.exception.CustomException;
@@ -17,7 +18,7 @@
     @RequestMapping("/api/admin")
     @RequiredArgsConstructor
     public class AdminController {
-    
+
         private final AdminService adminService;
         @GetMapping("/status")
         public ResponseEntity<?> checkAdminStatus(org.springframework.security.core.Authentication authentication) {
@@ -46,6 +47,12 @@
             } catch (CustomException e) {
                 return ResponseEntity.badRequest().body(e.getMessage());
             }
+        }
+
+
+        @GetMapping("/users/profiles")
+        public List<UserProfileadmiDTO> getUserProfiles() {
+            return adminService.getAllUserProfiles();
         }
 
         @GetMapping("/users/banned")
