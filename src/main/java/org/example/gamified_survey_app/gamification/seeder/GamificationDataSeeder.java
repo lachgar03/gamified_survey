@@ -118,7 +118,7 @@ public class GamificationDataSeeder {
             // Seeder pour les cadeaux (exemple)
             if (giftRepository.count() == 0) {
                 giftRepository.saveAll(List.of(
-                        new Gift(null, "Bon d'achat Amazon", "Bon de 10€ à utiliser sur Amazon.fr", "https://global24.com/wp-content/uploads/2023/12/amazon-logo.png", 1500, 50, true),
+                        new Gift(null, "Bon d'achat Amazon", "Bon de 10€ à utiliser sur Amazon.fr", "https://techcrunch.com/wp-content/uploads/2014/06/amazon-angled.jpg", 1500, 50, true),
                         new Gift(null, "Réduction Spotify", "Réduction de 50% sur un mois d’abonnement Spotify", "https://blog.push.fm/wp-content/uploads/2022/05/folder_920_201707260845-1-min.png", 1000, 100, true),
                         new Gift(null, "Carte cadeau Fnac", "Carte cadeau de 20€", "https://www.lefildaurelie.fr/img_s1/139034/boutique/screenshot_20230205_160015_chrome.jpg", 2500, 30, true)
                 ));
