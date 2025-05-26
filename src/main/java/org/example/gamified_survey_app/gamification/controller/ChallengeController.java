@@ -84,14 +84,14 @@ public class ChallengeController {
         return ResponseEntity.ok(convertToUserChallengeDTO(userChallenge));
     }
 
-    @PostMapping("/claim/{userChallengeId}")
-    public ResponseEntity<UserChallengeDTO> claimReward(
-            @AuthenticationPrincipal AppUser user,
-            @PathVariable Long userChallengeId) {
-
-        UserChallenge userChallenge = challengeService.claimChallengeReward(user, userChallengeId);
-        return ResponseEntity.ok(convertToUserChallengeDTO(userChallenge));
-    }
+//    @PostMapping("/claim/{userChallengeId}")
+//    public ResponseEntity<UserChallengeDTO> claimReward(
+//            @AuthenticationPrincipal AppUser user,
+//            @PathVariable Long userChallengeId) {
+//
+//        UserChallenge userChallenge = challengeService.claimChallengeReward(user, userChallengeId);
+//        return ResponseEntity.ok(convertToUserChallengeDTO(userChallenge));
+//    }
 
     @GetMapping("/{challengeId}/user-has")
     public ResponseEntity<Boolean> hasUserEarnedChallenge(

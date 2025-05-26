@@ -22,11 +22,10 @@ public class UserChallenge {
     @JoinColumn(name = "user_id")
     private AppUser user;
 
-    @ManyToOne
-    @JoinColumn(name = "badge_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "challenge_id")
     private Challenge challenge;
 
-    // Track progress toward badge (optional)
     private Integer currentValue = 0;
 
     private boolean completed = false;

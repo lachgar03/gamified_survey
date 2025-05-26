@@ -20,7 +20,7 @@ public class CacheConfig {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
         cacheManager.setCacheNames(Arrays.asList(
             "levels", 
-            "badges", 
+            "challengess",
             "activeSurveys", 
             "availableSurveys",
             "leaderboards",

@@ -1,9 +1,7 @@
 package org.example.gamified_survey_app.survey.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,9 +11,11 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded  = true)
 public class Forum {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     private String title;
@@ -25,6 +25,8 @@ public class Forum {
 
     @OneToOne
     @JoinColumn(name = "survey_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Survey survey;
 
     @OneToMany(mappedBy = "forum", cascade = CascadeType.ALL, orphanRemoval = true)

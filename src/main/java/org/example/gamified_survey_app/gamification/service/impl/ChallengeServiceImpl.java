@@ -1,5 +1,7 @@
 package org.example.gamified_survey_app.gamification.service.impl;
 
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.gamified_survey_app.auth.model.AppUser;
 import org.example.gamified_survey_app.gamification.constant.ChallengeType;
@@ -8,11 +10,13 @@ import org.example.gamified_survey_app.gamification.model.UserChallenge;
 import org.example.gamified_survey_app.gamification.repository.ChallengeRepository;
 import org.example.gamified_survey_app.gamification.repository.UserChallengeRepository;
 import org.example.gamified_survey_app.gamification.service.ChallengeService;
+import org.example.gamified_survey_app.gamification.service.UserXpService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +24,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     private final ChallengeRepository challengeRepository;
     private final UserChallengeRepository userChallengeRepository;
+    private final UserXpService userXpService;
 
     @Override
     public List<Challenge> getAllChallenges() {
@@ -53,7 +58,10 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     @Override
     public List<UserChallenge> getUserChallenges(AppUser user) {
-        return userChallengeRepository.findByUser(user);
+        List<UserChallenge> challenges = userChallengeRepository.findByUserWithChallenge(user);
+        return challenges.stream()
+                .filter(uc -> uc.getChallenge() != null) // Filter out any null challenges
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -72,36 +80,43 @@ public class ChallengeServiceImpl implements ChallengeService {
     }
 
     @Override
+    @Transactional
     public UserChallenge awardChallenge(AppUser user, Long challengeId) {
-        Optional<UserChallenge> existing = userChallengeRepository.findByUserAndChallengeId(user, challengeId);
-        if (existing.isPresent()) {
-            return existing.get();
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
         }
 
-        Challenge challenge = challengeRepository.findById(challengeId)
-                .orElseThrow(() -> new RuntimeException("Challenge not found"));
+        return userChallengeRepository.findByUserAndChallengeId(user, challengeId)
+                .orElseGet(() -> {
+                    Challenge challenge = challengeRepository.findById(challengeId)
+                            .orElseThrow(() -> new EntityNotFoundException("Challenge not found with id: " + challengeId));
 
-        UserChallenge userChallenge = new UserChallenge();
-        userChallenge.setUser(user);
-        userChallenge.setChallenge(challenge);
-        userChallenge.setStartedAt(LocalDateTime.now());
-        userChallenge.setCurrentValue(0);
-        userChallenge.setCompleted(false);
-        userChallenge.setRewardClaimed(false);
+                    UserChallenge userChallenge = new UserChallenge();
+                    userChallenge.setUser(user);
+                    userChallenge.setChallenge(challenge);
+                    userChallenge.setStartedAt(LocalDateTime.now());
+                    userChallenge.setCurrentValue(0);
+                    userChallenge.setCompleted(false);
+                    userChallenge.setRewardClaimed(false);
 
-        return userChallengeRepository.save(userChallenge);
+                    return userChallengeRepository.save(userChallenge);
+                });
     }
 
     @Override
+    @Transactional
     public boolean hasUserEarnedChallenge(AppUser user, Long challengeId) {
-        return userChallengeRepository.findByUserAndChallengeId(user, challengeId)
-                .map(UserChallenge::isCompleted)
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
+        return userChallengeRepository.isChallengeCompleted(user, challengeId)
                 .orElse(false);
     }
 
     @Override
-    public UserChallenge claimChallengeReward(AppUser user, Long userChallengeId) {
-        UserChallenge userChallenge = userChallengeRepository.findById(userChallengeId)
+    public UserChallenge claimChallengeReward(AppUser user, Challenge userChallengeId) {
+        UserChallenge userChallenge = userChallengeRepository.findById(userChallengeId.getId())
                 .orElseThrow(() -> new RuntimeException("UserChallenge not found"));
 
         if (!userChallenge.getUser().getId().equals(user.getId()) || !userChallenge.isCompleted()) {
@@ -110,7 +125,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 
         userChallenge.setRewardClaimed(true);
         userChallenge.setRewardClaimedAt(LocalDateTime.now());
-
+        userXpService.updateUserXp(user, userChallengeId.getXpValue());
         return userChallengeRepository.save(userChallenge);
     }
 
@@ -127,10 +142,10 @@ public class ChallengeServiceImpl implements ChallengeService {
             int newValue = userChallenge.getCurrentValue() + value;
             userChallenge.setCurrentValue(newValue);
 
-            // For now assume each challenge completion threshold is 100
-            if (newValue >= 100) {
+            if (newValue >= challenge.getTargetValue()) {
                 userChallenge.setCompleted(true);
                 userChallenge.setCompletedAt(LocalDateTime.now());
+                claimChallengeReward(userChallenge.getUser(), challenge);
             }
 
             userChallengeRepository.save(userChallenge);

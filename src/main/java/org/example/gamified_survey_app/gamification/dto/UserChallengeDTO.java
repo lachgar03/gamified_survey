@@ -13,7 +13,7 @@ public class UserChallengeDTO {
     private Long id;
     private Long userId;
     private String userName;
-    private ChallengeDTO badge;
+    private ChallengeDTO challenge;
     private Integer currentValue;
     private boolean completed;
     private LocalDateTime completedAt;

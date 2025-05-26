@@ -13,6 +13,8 @@ import org.example.gamified_survey_app.auth.repository.UserRepository;
 import org.example.gamified_survey_app.core.constants.Roles;
 import org.example.gamified_survey_app.core.exception.CustomException;
 import org.example.gamified_survey_app.core.service.FraudDetectionService;
+import org.example.gamified_survey_app.gamification.constant.ChallengeType;
+import org.example.gamified_survey_app.gamification.service.ChallengeService;
 import org.example.gamified_survey_app.gamification.service.LeaderboardService;
 import org.example.gamified_survey_app.gamification.service.UserXpService;
 import org.example.gamified_survey_app.survey.dto.SurveyDtos;
@@ -50,6 +52,7 @@ public class SurveyService {
     private final FraudDetectionService fraudDetectionService;
     private final UserXpService userXpService;
     private final ForumService forumService;
+    private final ChallengeService challengeService;
 
     @Transactional
     public SurveyDtos.SurveyResponse createSurvey(SurveyDtos.SurveyRequest request) {
@@ -262,6 +265,8 @@ public class SurveyService {
         // Update user's XP
         if (xpAwarded > 0) {
             userXpService.updateUserXp(currentUser, xpAwarded);
+            challengeService.updateChallengeProgress(currentUser, ChallengeType.COMPLETE_SURVEYS, 1, null);
+
         }
 
 

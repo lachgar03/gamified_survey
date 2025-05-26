@@ -17,15 +17,12 @@ public class ChallengeDTO {
     private String description;
     private Integer XpValue;
     private String achievementCondition;
-
     private Integer targetValue;
     private ChallengeType actionType;
     private ChallengePeriod period; // ✅ Add this line
-
     private Integer currentValue;
     private boolean completed;
     private LocalDateTime completedAt;
-
     private boolean rewardClaimed;
     private LocalDateTime rewardClaimedAt;
 }

@@ -18,7 +18,9 @@ import org.example.gamified_survey_app.core.constants.Roles;
 import org.example.gamified_survey_app.core.exception.CustomException;
 import org.example.gamified_survey_app.core.service.EmailService;
 import org.example.gamified_survey_app.core.util.JwtUtils;
+import org.example.gamified_survey_app.gamification.constant.ChallengeType;
 import org.example.gamified_survey_app.gamification.repository.LevelRepository;
+import org.example.gamified_survey_app.gamification.service.ChallengeService;
 import org.example.gamified_survey_app.gamification.service.LeaderboardService;
 import org.example.gamified_survey_app.user.model.AvatarConfig;
 import org.example.gamified_survey_app.user.model.Referral;
@@ -57,6 +59,7 @@ public class AuthService {
     private final ReferralService referralService;
     private final LeaderboardService leaderboardService;
     private final AvatarConfigRepository avatarConfigRepository;
+    private final ChallengeService challengeService;
 
 
     @Value("${admin.username}")
@@ -167,6 +170,8 @@ public class AuthService {
         // Load UserDetails from the UserDetailsService
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtUtils.generateToken(userDetails);
+        challengeService.assignChallengesToUser(user);
+        challengeService.updateChallengeProgress(user, ChallengeType.DAILY_LOGIN, 1, null);
         return new AuthResponse(token, user);
     }
     

@@ -23,9 +23,9 @@ public interface ChallengeService {
     List<UserChallenge> getInProgressChallenges(AppUser user);
     List<UserChallenge> getUnclaimedChallenges(AppUser user);
 
-    UserChallenge awardChallenge(AppUser user, Long badgeId);
-    boolean hasUserEarnedChallenge(AppUser user, Long badgeId);
-    UserChallenge claimChallengeReward(AppUser user, Long userChallengeId);
+    UserChallenge awardChallenge(AppUser user, Long challengeId);
+    boolean hasUserEarnedChallenge(AppUser user, Long challengeId);
+    UserChallenge claimChallengeReward(AppUser user, Challenge userChallengeId);
 
     // Progress Tracking
     void updateChallengeProgress(AppUser user, ChallengeType type, int value, String extraData);

@@ -38,7 +38,6 @@ public class GamificationDataSeeder {
                 ));
             }
 
-            // Seeder pour les badges
             if (challengeRepository.count() == 0) {
                 challengeRepository.saveAll(List.of(
                         new Challenge(
@@ -59,26 +58,6 @@ public class GamificationDataSeeder {
                                 1,
                                 ChallengeType.COMPLETE_CATEGORY_SURVEYS,
                                 "Répondre à 1 sondage par catégorie",
-                                ChallengePeriod.PERMANENT
-                        ),
-                        new Challenge(
-                                null,
-                                "Nouveau Répondant",
-                                "Un filleul a répondu à 5 sondages",
-                                5,
-                                5,
-                                ChallengeType.REFER_USERS,
-                                "Un filleul a répondu à 5 sondages",
-                                ChallengePeriod.PERMANENT
-                        ),
-                        new Challenge(
-                                null,
-                                "Super Parrain",
-                                "Un filleul a atteint le niveau 3",
-                                3,
-                                3,
-                                ChallengeType.REFER_USERS,
-                                "Un filleul atteint le niveau 3",
                                 ChallengePeriod.PERMANENT
                         ),
                         new Challenge(
@@ -110,16 +89,6 @@ public class GamificationDataSeeder {
                                 ChallengeType.QUICK_RESPONSE,
                                 "Répondre rapidement à 5 sondages",
                                 ChallengePeriod.DAILY
-                        ),
-                        new Challenge(
-                                null,
-                                "Populaire",
-                                "Obtenir 10 likes sur vos commentaires",
-                                10,
-                                10,
-                                ChallengeType.GET_COMMENT_LIKES,
-                                "Obtenir 10 likes sur vos commentaires",
-                                ChallengePeriod.PERMANENT
                         ),
                         new Challenge(
                                 null,

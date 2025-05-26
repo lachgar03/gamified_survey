@@ -5,6 +5,8 @@ import org.example.gamified_survey_app.auth.model.AppUser;
 import org.example.gamified_survey_app.auth.repository.UserRepository;
 import org.example.gamified_survey_app.core.constants.Roles;
 import org.example.gamified_survey_app.core.exception.CustomException;
+import org.example.gamified_survey_app.gamification.constant.ChallengeType;
+import org.example.gamified_survey_app.gamification.service.ChallengeService;
 import org.example.gamified_survey_app.survey.dto.SurveyDtos;
 import org.example.gamified_survey_app.survey.model.*;
 import org.example.gamified_survey_app.survey.repository.*;
@@ -32,6 +34,7 @@ public class ForumService {
     private final SurveyRepository surveyRepository;
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
+    private final ChallengeService challengeService;
 
     // Helper method to get current user
     private AppUser getCurrentUser() {
@@ -177,6 +180,8 @@ public class ForumService {
         comment.setSubject(subject);
 
         Comment savedComment = commentRepository.save(comment);
+        challengeService.updateChallengeProgress(currentUser, ChallengeType.CREATE_COMMENTS, 1, null);
+
 
         return mapToCommentResponse(savedComment);
     }

@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import org.example.gamified_survey_app.auth.model.AppUser;
 import org.example.gamified_survey_app.core.exception.CustomException;
+import org.example.gamified_survey_app.gamification.constant.ChallengeType;
+import org.example.gamified_survey_app.gamification.service.ChallengeService;
 import org.example.gamified_survey_app.gamification.service.UserXpService;
 import org.example.gamified_survey_app.user.model.Referral;
 import org.example.gamified_survey_app.user.repository.ReferralRepository;
@@ -26,6 +28,7 @@ public class ReferralServiceImpl implements ReferralService {
 
     private static final int REFERRAL_BONUS_XP = 50;
     private final UserXpService userXpService;
+    private final ChallengeService challengeService;
 
     @Override
     @Transactional
@@ -127,6 +130,8 @@ public class ReferralServiceImpl implements ReferralService {
         
         referralRepository.save(referral);
          userXpService.updateUserXp(user , bonusXp);
+        challengeService.updateChallengeProgress(user, ChallengeType.REFER_USERS, 1, null);
+
 
         log.info("Awarded {} bonus XP to referrer: {}", bonusXp, user.getEmail());
     }

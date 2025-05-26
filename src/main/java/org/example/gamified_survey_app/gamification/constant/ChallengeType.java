@@ -8,8 +8,7 @@ public enum ChallengeType {
     
     // Forum-related challenges
     CREATE_COMMENTS,           // Create a certain number of comments
-    GET_COMMENT_LIKES,         // Get likes on your comments
-    
+
     // Referral-related challenges
     REFER_USERS,               // Refer a certain number of users
     
