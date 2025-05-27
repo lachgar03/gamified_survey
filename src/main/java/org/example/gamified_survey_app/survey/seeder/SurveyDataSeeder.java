@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.gamified_survey_app.auth.model.AppUser;
 import org.example.gamified_survey_app.auth.repository.UserRepository;
 import org.example.gamified_survey_app.core.constants.Roles;
+import org.example.gamified_survey_app.gamification.service.UserXpService;
 import org.example.gamified_survey_app.survey.model.*;
 import org.example.gamified_survey_app.survey.repository.*;
 import org.springframework.boot.CommandLineRunner;
@@ -31,6 +32,7 @@ public class SurveyDataSeeder implements CommandLineRunner {
     private final CommentRepository commentRepository;
     private final SurveyResponseRepository surveyResponseRepository;
     private final QuestionResponseRepository questionResponseRepository;
+    private final UserXpService userXpService; // Add this dependency
 
     private final Random random = new Random();
 
@@ -264,9 +266,16 @@ public class SurveyDataSeeder implements CommandLineRunner {
             surveyResponse.setCompletedAt(surveyResponse.getStartedAt().plusMinutes(random.nextInt(30) + 5));
             surveyResponse.setTimeSpentSeconds(random.nextInt(1800) + 300); // 5-35 minutes
             surveyResponse.setFlaggedAsSuspicious(random.nextDouble() < 0.05); // 5% flagged
-            surveyResponse.setXpAwarded(surveyResponse.isFlaggedAsSuspicious() ? 0 : survey.getXpReward());
+
+            int xpToAward = surveyResponse.isFlaggedAsSuspicious() ? 0 : survey.getXpReward();
+            surveyResponse.setXpAwarded(xpToAward);
 
             SurveyResponse savedResponse = surveyResponseRepository.save(surveyResponse);
+
+            // Award XP to the participant if not flagged as suspicious
+            if (!surveyResponse.isFlaggedAsSuspicious() && xpToAward > 0) {
+                userXpService.updateUserXp(participant, xpToAward);
+            }
 
             // Create question responses
             for (Question question : questions) {
