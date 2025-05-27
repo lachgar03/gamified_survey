@@ -123,7 +123,7 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
             double charsPerSecond = (double) totalChars / response.getTimeSpentSeconds();
             
             // If typing speed is unrealistically fast (more than 10 chars per second on average)
-            if (charsPerSecond > 100) {
+            if (charsPerSecond > 30) {
                 log.warn("Suspicious pattern: Unrealistically fast typing detected ({} chars/sec)", charsPerSecond);
                 return true;
             }
