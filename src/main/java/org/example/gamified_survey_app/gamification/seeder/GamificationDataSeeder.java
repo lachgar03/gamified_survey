@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.example.gamified_survey_app.gamification.constant.ChallengePeriod;
 import org.example.gamified_survey_app.gamification.constant.ChallengeType;
+import org.springframework.core.annotation.Order;
 
 import java.util.List;
 
@@ -18,6 +19,7 @@ import java.util.List;
 public class GamificationDataSeeder {
 
     @Bean
+    @Order(2)
     CommandLineRunner seedData(
             ChallengeRepository challengeRepository,
             LevelRepository levelRepository,

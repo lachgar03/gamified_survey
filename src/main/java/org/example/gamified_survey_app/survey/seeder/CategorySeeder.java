@@ -5,6 +5,7 @@ import org.example.gamified_survey_app.survey.repository.CategoryRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
 public class CategorySeeder {
 
     @Bean
+    @Order(1)
     CommandLineRunner seedSurveyCategories(CategoryRepository repository) {
         return args -> {
             if (repository.count() == 0) {
